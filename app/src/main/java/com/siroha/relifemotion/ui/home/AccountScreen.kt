@@ -88,7 +88,7 @@ fun AccountScreen(onClose: () -> Unit) {
         AlertDialog(
             onDismissRequest = { editName = false }, title = { Text("Ubah nama") },
             text = { OutlinedTextField(v, { v = it }, singleLine = true) },
-            confirmButton = { TextButton(onClick = { if (v.isNotBlank()) s.setUserName(v.trim()); editName = false }) { Text("Simpan") } },
+            confirmButton = { TextButton(onClick = { if (v.isNotBlank()) s.applyUserName(v.trim()); editName = false }) { Text("Simpan") } },
             dismissButton = { TextButton(onClick = { editName = false }) { Text("Batal") } }
         )
     }

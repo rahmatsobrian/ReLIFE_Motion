@@ -23,12 +23,12 @@ class SettingsStore(ctx: Context) {
     var userName by mutableStateOf(sp.getString("userName", "Siroha")!!); private set
     var showGrid by mutableStateOf(false); private set
 
-    fun setThemeMode(v: ThemeMode) { themeMode = v; sp.edit().putString("theme", v.name).apply() }
+    fun applyThemeMode(v: ThemeMode) { themeMode = v; sp.edit().putString("theme", v.name).apply() }
     fun setDynamic(v: Boolean) { dynamicColor = v; sp.edit().putBoolean("dynamic", v).apply() }
-    fun setLowPreview(v: Boolean) { lowPreview = v; sp.edit().putBoolean("lowPreview", v).apply() }
+    fun applyLowPreview(v: Boolean) { lowPreview = v; sp.edit().putBoolean("lowPreview", v).apply() }
     fun setDemo(v: Boolean) { demoMode = v; sp.edit().putBoolean("demo", v).apply() }
     fun setDefaultDur(v: Int) { defaultDurSec = v; sp.edit().putInt("durSec", v).apply() }
-    fun setAudioQuality(v: Int) { audioQuality = v; sp.edit().putInt("audioQ", v).apply() }
-    fun setAccessMode(v: AccessMode) { accessMode = v; sp.edit().putString("access", v.name).apply() }
-    fun setUserName(v: String) { userName = v; sp.edit().putString("userName", v).apply() }
+    fun applyAudioQuality(v: Int) { audioQuality = v; sp.edit().putInt("audioQ", v).apply() }
+    fun applyAccessMode(v: AccessMode) { accessMode = v; sp.edit().putString("access", v.name).apply() }
+    fun applyUserName(v: String) { userName = v; sp.edit().putString("userName", v).apply() }
 }

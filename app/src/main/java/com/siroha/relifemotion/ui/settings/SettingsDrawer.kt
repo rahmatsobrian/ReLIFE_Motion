@@ -48,7 +48,7 @@ fun SettingsDrawer() {
         Text("Pengaturan", Modifier.padding(16.dp), fontSize = 20.sp, fontWeight = FontWeight.Bold)
 
         SCard {
-            SwitchRow("Pratinjau Kualitas Rendah", s.lowPreview, { s.setLowPreview(it) })
+            SwitchRow("Pratinjau Kualitas Rendah", s.lowPreview, { s.applyLowPreview(it) })
             SwitchRow("Mode Demo", s.demoMode, { s.setDemo(it) })
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("Durasi Layer Bawaan", Modifier.weight(1f), fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
@@ -58,7 +58,7 @@ fun SettingsDrawer() {
             Column(Modifier.padding(16.dp)) {
                 Text("Pengambilan Ulang Audio", fontSize = 12.sp, color = cs.onSurfaceVariant)
                 Spacer(Modifier.height(6.dp))
-                Segmented(listOf("RENDAH", "TINGGI", "ULTRA"), s.audioQuality, { s.setAudioQuality(it) })
+                Segmented(listOf("RENDAH", "TINGGI", "ULTRA"), s.audioQuality, { s.applyAudioQuality(it) })
             }
         }
 
@@ -67,7 +67,7 @@ fun SettingsDrawer() {
             Column(Modifier.padding(16.dp)) {
                 Text("Tema", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(8.dp))
-                Segmented(listOf("Sistem", "Terang", "Gelap", "AMOLED"), s.themeMode.ordinal, { s.setThemeMode(ThemeMode.values()[it]) })
+                Segmented(listOf("Sistem", "Terang", "Gelap", "AMOLED"), s.themeMode.ordinal, { s.applyThemeMode(ThemeMode.values()[it]) })
             }
             SwitchRow(
                 "Warna Dinamis (Material You)", s.dynamicColor, { s.setDynamic(it) },
@@ -78,7 +78,7 @@ fun SettingsDrawer() {
         Label("Mode Akses")
         SCard {
             Column(Modifier.padding(16.dp)) {
-                Segmented(listOf("Non-root", "Shizuku", "Root"), s.accessMode.ordinal, { s.setAccessMode(AccessMode.values()[it]) })
+                Segmented(listOf("Non-root", "Shizuku", "Root"), s.accessMode.ordinal, { s.applyAccessMode(AccessMode.values()[it]) })
                 Spacer(Modifier.height(12.dp))
                 StatusRow("Non-root", true, "Selalu tersedia")
                 StatusRow("Shizuku", Privileged.shizukuGranted, when {

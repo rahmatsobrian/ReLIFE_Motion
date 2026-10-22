@@ -195,7 +195,7 @@ fun EditorScreen(id: String, onBack: () -> Unit) {
                     Column(Modifier.clip(RoundedCornerShape(10.dp)).background(cs.surfaceContainerHigh.copy(alpha = 0.92f)), horizontalAlignment = Alignment.CenterHorizontally) {
                         RailBtn(Icons.Rounded.CropSquare, { showSel = !showSel }, showSel)
                         RailBtn(Icons.Rounded.GridOn, { gridOn = !gridOn }, gridOn)
-                        RailBtn(Icons.Rounded.Layers, { Graph.settings.setLowPreview(!Graph.settings.lowPreview) }, !Graph.settings.lowPreview)
+                        RailBtn(Icons.Rounded.Layers, { Graph.settings.applyLowPreview(!Graph.settings.lowPreview) }, !Graph.settings.lowPreview)
                         RailBtn(Icons.Rounded.FitScreen, { vp.reset() })
                         RailBtn(Icons.Rounded.Add, { vp.zoom = (vp.zoom * 1.25f).coerceAtMost(12f) })
                         Text("${(vp.zoom * 100).toInt()}%", fontSize = 9.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(vertical = 2.dp))

@@ -8,7 +8,10 @@ plugins {
 android {
     namespace = "com.siroha.relifemotion"
     compileSdk {
-        version = release(37)
+        // Compose 1.13.0-beta01 mensyaratkan compileSdk minimal 37.1
+        version = release(37) {
+            minorApiLevel = 1
+        }
     }
 
     defaultConfig {
