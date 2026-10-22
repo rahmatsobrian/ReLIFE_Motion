@@ -56,7 +56,7 @@ private fun Boot() {
     val cs = MaterialTheme.colorScheme
     Box(Modifier.fillMaxSize().background(cs.background), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            ReLifeLogo(size = 30.sp)
+            ReLifeLogo(fontSize = 30.sp)
             Spacer(Modifier.height(28.dp))
             LoadingIndicator(Modifier.size(64.dp))
             Spacer(Modifier.height(14.dp))

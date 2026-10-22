@@ -28,6 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,10 +65,10 @@ import java.util.Locale
 fun Context.toast(msg: String) = Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
 
 @Composable
-fun ReLifeLogo(size: TextUnit = 20.sp) {
+fun ReLifeLogo(fontSize: TextUnit = 20.sp) {
     val cs = MaterialTheme.colorScheme
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text("ReLIFE Motion", fontSize = size, fontWeight = FontWeight.Bold, color = cs.onSurface, letterSpacing = 0.5.sp)
+        Text("ReLIFE Motion", fontSize = fontSize, fontWeight = FontWeight.Bold, color = cs.onSurface, letterSpacing = 0.5.sp)
         Spacer(Modifier.width(4.dp))
         val accent = cs.primary
         Canvas(Modifier.size(22.dp)) {
