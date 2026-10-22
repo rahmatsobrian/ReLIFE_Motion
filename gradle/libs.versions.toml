@@ -1,0 +1,39 @@
+[versions]
+agp = "9.4.0"
+kotlin = "2.4.0"
+composeCore = "1.13.0-beta01"
+material3 = "1.5.0-beta01"
+iconsExtended = "1.7.8"
+graphicsShapes = "1.0.1"
+activityCompose = "1.11.0"
+coreKtx = "1.17.0"
+lifecycle = "2.9.4"
+navigation = "2.9.5"
+coroutines = "1.10.2"
+shizuku = "13.1.5"
+
+[libraries]
+kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
+androidx-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
+androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
+androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation" }
+compose-runtime = { module = "androidx.compose.runtime:runtime", version.ref = "composeCore" }
+compose-ui = { module = "androidx.compose.ui:ui", version.ref = "composeCore" }
+compose-ui-graphics = { module = "androidx.compose.ui:ui-graphics", version.ref = "composeCore" }
+compose-ui-text = { module = "androidx.compose.ui:ui-text", version.ref = "composeCore" }
+compose-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "composeCore" }
+compose-foundation-layout = { module = "androidx.compose.foundation:foundation-layout", version.ref = "composeCore" }
+compose-animation = { module = "androidx.compose.animation:animation", version.ref = "composeCore" }
+compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
+compose-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "iconsExtended" }
+graphics-shapes = { module = "androidx.graphics:graphics-shapes", version.ref = "graphicsShapes" }
+coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+shizuku-api = { module = "dev.rikka.shizuku:api", version.ref = "shizuku" }
+shizuku-provider = { module = "dev.rikka.shizuku:provider", version.ref = "shizuku" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
