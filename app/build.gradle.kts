@@ -24,10 +24,10 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = rootProject.file("keystore/relife-release.jks")
-            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "relife123"
-            keyAlias = System.getenv("KEY_ALIAS") ?: "relife"
-            keyPassword = System.getenv("KEY_PASSWORD") ?: "relife123"
+            storeFile = rootProject.file("keystore/release-key.jks")
+            storePassword = System.getenv("KEYSTORE_PASSWORD")?.takeIf { it.isNotBlank() } ?: "rahmatsobrian"
+            keyAlias = System.getenv("KEY_ALIAS")?.takeIf { it.isNotBlank() } ?: "rahmatsobrian"
+            keyPassword = System.getenv("KEY_PASSWORD")?.takeIf { it.isNotBlank() } ?: "rahmatsobrian"
         }
     }
 
