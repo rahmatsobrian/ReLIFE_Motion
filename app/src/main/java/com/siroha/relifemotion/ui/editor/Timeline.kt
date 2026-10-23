@@ -8,6 +8,7 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -46,6 +47,7 @@ import com.siroha.relifemotion.data.fmtTime
 import com.siroha.relifemotion.ui.common.Diamond
 import com.siroha.relifemotion.ui.common.Glyph
 import com.siroha.relifemotion.ui.common.GlyphIcon
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 fun layerColor(t: LayerType): Color = when (t) {
@@ -81,16 +83,20 @@ fun Timeline(vm: EditorVM, modifier: Modifier, showFab: Boolean, onFab: () -> Un
     Box(
         modifier.background(cs.surface).pointerInput(Unit) {
             awaitEachGesture {
-                awaitFirstDown(requireUnconsumed = false)
+                val down = awaitFirstDown(requireUnconsumed = false)
+                var moved = false; var consumedAny = false; var multiTouch = false
                 do {
                     val ev = awaitPointerEvent()
-                    if (ev.changes.any { it.isConsumed }) continue
+                    if (ev.changes.any { it.isConsumed }) { consumedAny = true; continue }
                     val n = ev.changes.count { it.pressed }
                     if (n >= 2) {
+                        multiTouch = true
                         dpPerSec = (dpPerSec * ev.calculateZoom()).coerceIn(15f, 600f)
                         ev.changes.forEach { it.consume() }
                     } else if (n == 1) {
                         val c = ev.changes.first()
+                        if (abs(c.position.x - down.position.x) > viewConfiguration.touchSlop ||
+                            abs(c.position.y - down.position.y) > viewConfiguration.touchSlop) moved = true
                         val dx = c.position.x - c.previousPosition.x
                         if (dx != 0f) {
                             vmS.seek(vmS.timeMs - (dx / pxPerMsS).toLong())
@@ -98,6 +104,8 @@ fun Timeline(vm: EditorVM, modifier: Modifier, showFab: Boolean, onFab: () -> Un
                         }
                     }
                 } while (ev.changes.any { it.pressed })
+                // ketuk area kosong timeline: batalkan pilihan layer (panel tertutup)
+                if (!moved && !consumedAny && !multiTouch) vmS.clearSelection()
             }
         }
     ) {
@@ -132,7 +140,7 @@ fun Timeline(vm: EditorVM, modifier: Modifier, showFab: Boolean, onFab: () -> Un
             // lajur layer (jarak antar lajur 32dp)
             Column(Modifier.fillMaxSize().padding(top = 45.dp).verticalScroll(rememberScrollState())) {
                 val laneIds = lanes.map { it.id }
-                lanes.forEachIndexed { i, l -> Lane(vm, l, cx, pxPerMs, multi, i, laneIds) }
+                lanes.forEachIndexed { i, l -> key(l.id) { Lane(vm, l, cx, pxPerMs, multi, i, laneIds) } }
                 Spacer(Modifier.height(80.dp))
             }
 
@@ -175,6 +183,7 @@ private fun Lane(vm: EditorVM, l: Layer, cx: Float, pxPerMs: Float, multi: Boole
     val pillShape = RoundedCornerShape(topEnd = 13.dp, bottomEnd = 13.dp)
     val idsS by rememberUpdatedState(laneIds)
     val indexS by rememberUpdatedState(index)
+    val multiS by rememberUpdatedState(multi)
 
     Box(Modifier.fillMaxWidth().height(28.dp)) {
         // bar bergaris
@@ -243,20 +252,27 @@ private fun Lane(vm: EditorVM, l: Layer, cx: Float, pxPerMs: Float, multi: Boole
         Row(
             Modifier.align(Alignment.CenterStart).height(25.dp).clip(pillShape)
                 .background(if (multi && sel) Mint else cs.surfaceContainer)
-                .then(if (multi && sel) Modifier else Modifier.border(1.dp, cs.outlineVariant.copy(alpha = 0.5f), pillShape))
-                .clickable { if (multi) vm.select(l.id, additive = true) else vm.toggleVisible(l.id) }
+                .border(1.dp, if (multi && sel) Color.Transparent else cs.outlineVariant.copy(alpha = 0.5f), pillShape)
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = { if (multiS) vm.select(lS.id, additive = true) else vm.toggleVisible(lS.id) })
+                }
                 .pointerInput(Unit) {
                     var acc = 0f
-                    var last = indexS
+                    var last = 0
+                    var startIdx = 0
                     detectDragGesturesAfterLongPress(
-                        onDragStart = { off -> acc = off.y; last = indexS; vm.beginMulti(idsS[indexS]) },
+                        onDragStart = { off ->
+                            acc = off.y; startIdx = indexS; last = startIdx
+                            vm.beginMulti(lS.id)
+                        },
                         onDrag = { change, drag ->
                             change.consume()
                             acc += drag.y
+                            val all = vm.project.layers
                             val laneH = 28.dp.toPx()
-                            val cur = (indexS + Math.floor(((acc + 1.5.dp.toPx()) / laneH).toDouble()).toInt()).coerceIn(0, idsS.size - 1)
+                            val cur = (startIdx + Math.floor(((acc + 1.5.dp.toPx()) / laneH).toDouble()).toInt()).coerceIn(0, all.size - 1)
                             val range = if (cur >= last) last..cur else cur..last
-                            for (k in range) vm.beginMulti(idsS[k])
+                            for (k in range) vm.beginMulti(all[k].id)
                             last = cur
                         }
                     )

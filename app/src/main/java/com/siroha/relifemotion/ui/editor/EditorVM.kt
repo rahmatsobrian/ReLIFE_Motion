@@ -334,6 +334,7 @@ class EditorVM(val projectId: String) : ViewModel() {
                 } else listOf(l)
             })
         }
+        clearSelection()
     }
 
     /** Buang bagian kiri layer (sebelum playhead). */
@@ -350,24 +351,19 @@ class EditorVM(val projectId: String) : ViewModel() {
         updateSelected { l -> if (t > l.startMs + 50 && t < l.endMs) l.copy(endMs = t) else l }
     }
 
-    /** Lompat ke awal layer terpilih jika playhead ada di dalamnya, selain itu ke awal video. */
+    /** Batas waktu (awal & akhir) semua layer terpilih. */
+    private fun selBounds(): List<Long> = selLayers.flatMap { listOf(it.startMs, it.endMs) }.distinct().sorted()
+
+    /** Panah kiri: ke batas layer terpilih terdekat sebelum playhead; kalau tidak ada, ke awal video. */
     fun jumpToStart() {
-        val ls = selLayers
-        if (ls.isNotEmpty()) {
-            val s = ls.minOf { it.startMs }; val e = ls.maxOf { it.endMs }
-            if (timeMs > s && timeMs <= e) { seek(s); return }
-        }
-        seek(0L)
+        val prev = selBounds().lastOrNull { it < timeMs - 1 }
+        seek(prev ?: 0L)
     }
 
-    /** Lompat ke akhir layer terpilih jika playhead ada di dalamnya, selain itu ke akhir video. */
+    /** Panah kanan: ke batas layer terpilih terdekat setelah playhead; kalau tidak ada, ke akhir video. */
     fun jumpToEnd() {
-        val ls = selLayers
-        if (ls.isNotEmpty()) {
-            val s = ls.minOf { it.startMs }; val e = ls.maxOf { it.endMs }
-            if (timeMs >= s && timeMs < e) { seek(e); return }
-        }
-        seek(totalMs)
+        val next = selBounds().firstOrNull { it > timeMs + 1 }
+        seek(next ?: totalMs)
     }
 
     fun moveLayerTimes(id: String, start: Long, end: Long) {
