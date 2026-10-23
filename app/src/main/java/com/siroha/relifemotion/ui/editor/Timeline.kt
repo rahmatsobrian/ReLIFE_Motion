@@ -16,7 +16,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ChevronLeft
+import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -54,14 +56,26 @@ fun layerColor(t: LayerType): Color = when (t) {
     else -> Color(0xFF8A90A8)
 }
 
+private val Mint = Color(0xFF7BFBB0)
+
+private fun midEllipsis(name: String, maxChars: Int): String {
+    if (name.length <= maxChars || maxChars < 6) return name
+    val keep = maxChars - 1
+    val h = (keep + 1) / 2
+    return name.take(h) + "…" + name.takeLast(keep - h)
+}
+
 @Composable
 fun Timeline(vm: EditorVM, modifier: Modifier, showFab: Boolean, onFab: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val density = LocalDensity.current
-    var dpPerSec by remember { mutableFloatStateOf(57.5f) }
+    var dpPerSec by remember { mutableFloatStateOf(47f) }
     val pxPerMs = with(density) { dpPerSec.dp.toPx() } / 1000f
     val pxPerMsS by rememberUpdatedState(pxPerMs)
     val vmS by rememberUpdatedState(vm)
+    val multi = vm.multiMode || vm.selected.size > 1
+    val single = vm.sel
+    val lanes = if (!multi && single != null) listOf(single) else vm.project.layers
 
     Box(
         modifier.background(cs.surface).pointerInput(Unit) {
@@ -90,15 +104,14 @@ fun Timeline(vm: EditorVM, modifier: Modifier, showFab: Boolean, onFab: () -> Un
             val wPx = with(density) { maxWidth.toPx() }
             val cx = wPx / 2f
 
-            // penggaris: hanya dari 0 sampai durasi total, tick menggantung dari atas
+            // penggaris: hanya 0 .. durasi, tick menggantung dari atas
             Canvas(Modifier.fillMaxWidth().height(20.dp)) {
                 val total = vm.totalMs
-                val tickColor = cs.onSurfaceVariant.copy(alpha = 0.38f)
-                val capColor = cs.onSurfaceVariant.copy(alpha = 0.5f)
+                val tickColor = cs.onSurfaceVariant.copy(alpha = 0.4f)
+                val capColor = cs.onSurfaceVariant.copy(alpha = 0.55f)
                 val minorOk = pxPerMs * 100f >= 3.dp.toPx()
-                var t = 0L
                 val visStart = (vm.timeMs - (cx / pxPerMs).toLong() - 1000L).coerceAtLeast(0L)
-                t = (visStart / 100L) * 100L
+                var t = (visStart / 100L) * 100L
                 val visEnd = minOf(total, vm.timeMs + (cx / pxPerMs).toLong() + 1000L)
                 while (t <= visEnd) {
                     val x = cx + (t - vm.timeMs) * pxPerMs
@@ -115,46 +128,35 @@ fun Timeline(vm: EditorVM, modifier: Modifier, showFab: Boolean, onFab: () -> Un
                 }
             }
 
-            // lajur layer
-            Column(Modifier.fillMaxSize().padding(top = 50.dp).verticalScroll(rememberScrollState())) {
-                vm.project.layers.forEach { l -> Lane(vm, l, cx, pxPerMs) }
-                Spacer(Modifier.height(70.dp))
+            // lajur layer (jarak antar lajur 32dp)
+            Column(Modifier.fillMaxSize().padding(top = 51.dp).verticalScroll(rememberScrollState())) {
+                lanes.forEach { l -> Lane(vm, l, cx, pxPerMs, multi) }
+                Spacer(Modifier.height(80.dp))
             }
 
-            // handle ≡ di kanan
-            Column(Modifier.align(Alignment.TopEnd).padding(top = 50.dp, end = 8.dp)) {
-                vm.project.layers.forEach { _ ->
-                    Box(Modifier.height(34.dp), contentAlignment = Alignment.Center) {
-                        GlyphIcon(Glyph.HAMBURGER, tint = cs.onSurfaceVariant.copy(alpha = 0.6f), size = 18.dp)
-                    }
-                }
-            }
-
-            // chip waktu
+            // playhead dulu, lalu chip waktu DI DEPAN garis putih
+            Box(Modifier.offset { IntOffset(cx.roundToInt() - 2, 0) }.width(1.5.dp).fillMaxHeight().background(Color.White))
             Box(
-                Modifier.align(Alignment.TopCenter).padding(top = 21.dp).width(80.dp).height(20.dp)
+                Modifier.align(Alignment.TopCenter).padding(top = 21.dp).width(84.dp).height(20.dp)
                     .clip(RoundedCornerShape(3.dp)).background(cs.surfaceContainer),
                 contentAlignment = Alignment.Center
             ) {
-                Text(fmtTime(vm.timeMs, vm.project.fps), fontSize = 14.sp, color = cs.onSurface, maxLines = 1)
+                Text(fmtTime(vm.timeMs, vm.project.fps), fontSize = 15.sp, color = Color.White, maxLines = 1)
             }
-
-            // playhead
-            Box(Modifier.offset { IntOffset(cx.roundToInt() - 2, 0) }.width(1.5.dp).fillMaxHeight().background(Color.White))
         }
         if (showFab) {
             Box(
-                Modifier.align(Alignment.BottomEnd).padding(end = 14.dp, bottom = 15.dp).size(54.dp)
-                    .shadow(6.dp, CircleShape).clip(CircleShape).background(cs.surfaceContainer)
-                    .border(2.dp, cs.primaryContainer, CircleShape).clickable { onFab() },
+                Modifier.align(Alignment.BottomEnd).padding(end = 15.dp, bottom = 15.dp).size(54.dp)
+                    .clip(CircleShape).background(cs.surfaceContainer)
+                    .border(2.5.dp, Color(0xFF69F0AE), CircleShape).clickable { onFab() },
                 contentAlignment = Alignment.Center
-            ) { GlyphIcon(Glyph.PLUS, tint = cs.primaryContainer, size = 27.dp) }
+            ) { GlyphIcon(Glyph.PLUS, tint = Color(0xFF69F0AE), size = 26.dp) }
         }
     }
 }
 
 @Composable
-private fun Lane(vm: EditorVM, l: Layer, cx: Float, pxPerMs: Float) {
+private fun Lane(vm: EditorVM, l: Layer, cx: Float, pxPerMs: Float, multi: Boolean) {
     val cs = MaterialTheme.colorScheme
     val density = LocalDensity.current
     val sel = l.id in vm.selected
@@ -163,15 +165,17 @@ private fun Lane(vm: EditorVM, l: Layer, cx: Float, pxPerMs: Float) {
     val ppm by rememberUpdatedState(pxPerMs)
     val x = cx + (l.startMs - vm.timeMs) * pxPerMs
     val w = ((l.endMs - l.startMs) * pxPerMs).coerceAtLeast(12f)
+    val wDp = with(density) { w.toDp() }
     val chipColor = when (l.type) {
         LayerType.SHAPE, LayerType.TEXT, LayerType.DRAWING -> Color(l.fill).copy(alpha = 1f)
         else -> color
     }
+    val pillShape = RoundedCornerShape(topEnd = 15.dp, bottomEnd = 15.dp)
 
-    Box(Modifier.fillMaxWidth().height(34.dp)) {
+    Box(Modifier.fillMaxWidth().height(32.dp)) {
         // bar bergaris
         Box(
-            Modifier.offset { IntOffset(x.roundToInt(), 0) }.width(with(density) { w.toDp() }).height(26.dp).align(Alignment.CenterStart)
+            Modifier.offset { IntOffset(x.roundToInt(), 0) }.width(wDp).height(26.dp).align(Alignment.CenterStart)
                 .clip(RoundedCornerShape(3.dp))
                 .background(if (l.visible) color else color.copy(alpha = 0.4f))
                 .drawBehind {
@@ -179,8 +183,8 @@ private fun Lane(vm: EditorVM, l: Layer, cx: Float, pxPerMs: Float) {
                     var sx = sw
                     while (sx < size.width) { drawRect(Color.White.copy(alpha = 0.08f), Offset(sx, 0f), Size(sw, size.height)); sx += sw * 2 }
                 }
-                .then(if (sel) Modifier.border(1.5.dp, Color.White, RoundedCornerShape(3.dp)) else Modifier)
-                .clickable { vm.select(l.id, additive = false) }
+                .then(if (sel && multi) Modifier.border(1.5.dp, Mint, RoundedCornerShape(3.dp)) else Modifier)
+                .clickable { vm.select(l.id, additive = multi) }
                 .pointerInput(l.id) {
                     detectDragGestures { change, drag ->
                         change.consume()
@@ -199,10 +203,10 @@ private fun Lane(vm: EditorVM, l: Layer, cx: Float, pxPerMs: Float) {
                 }
         ) {
             Text(
-                l.name, Modifier.align(Alignment.CenterStart).padding(start = 12.dp, end = 6.dp), fontSize = 12.sp,
-                color = Color.Black, maxLines = 1, overflow = TextOverflow.Clip, fontWeight = FontWeight.Medium
+                midEllipsis(l.name, ((wDp.value - 28f) / 6.2f).toInt()), Modifier.align(Alignment.CenterStart).padding(start = 16.dp, end = 6.dp),
+                fontSize = 13.sp, color = Color.Black, maxLines = 1, overflow = TextOverflow.Clip
             )
-            if (sel) {
+            if (sel && !multi) {
                 l.keys.map { it.t }.distinct().forEach { kt ->
                     val kx = (kt - l.startMs) * pxPerMs
                     if (kx in 0f..w) Box(Modifier.offset { IntOffset(kx.roundToInt() - 14, 0) }.align(Alignment.CenterStart)) {
@@ -211,28 +215,43 @@ private fun Lane(vm: EditorVM, l: Layer, cx: Float, pxPerMs: Float) {
                 }
             }
         }
-        // tombol "‹" saat layer dipilih
-        if (sel) Box(
-            Modifier.offset { IntOffset(x.roundToInt() - with(density) { 30.dp.roundToPx() }, 0) }.align(Alignment.CenterStart)
-                .width(26.dp).height(26.dp).clip(RoundedCornerShape(13.dp)).background(cs.surfaceContainerHighest),
-            contentAlignment = Alignment.Center
-        ) { Icon(Icons.Rounded.ChevronLeft, null, Modifier.size(16.dp), tint = cs.onSurfaceVariant) }
 
-        // pil mata + kotak warna, menempel di tepi kiri
+        // pegangan "‹" dan "›" menempel di kiri/kanan bar saat satu layer dipilih
+        if (sel && !multi) {
+            Box(
+                Modifier.offset { IntOffset(x.roundToInt() - with(density) { 30.dp.roundToPx() }, 0) }.align(Alignment.CenterStart)
+                    .width(30.dp).height(26.dp).clip(RoundedCornerShape(topStart = 13.dp, bottomStart = 13.dp)).background(cs.surfaceContainerHighest),
+                contentAlignment = Alignment.Center
+            ) { Icon(Icons.Rounded.ChevronLeft, null, Modifier.size(20.dp), tint = cs.onSurfaceVariant) }
+            Box(
+                Modifier.offset { IntOffset((x + w).roundToInt(), 0) }.align(Alignment.CenterStart)
+                    .width(30.dp).height(26.dp).clip(RoundedCornerShape(topEnd = 13.dp, bottomEnd = 13.dp)).background(cs.surfaceContainerHighest),
+                contentAlignment = Alignment.Center
+            ) { Icon(Icons.Rounded.ChevronRight, null, Modifier.size(20.dp), tint = cs.onSurfaceVariant) }
+        }
+
+        // gagang ≡ di kanan (redup)
+        Box(Modifier.align(Alignment.CenterEnd).padding(end = 21.dp)) {
+            GlyphIcon(Glyph.HAMBURGER, tint = cs.onSurfaceVariant.copy(alpha = 0.35f), size = 12.dp)
+        }
+
+        // pil kiri: mata + kotak warna (mode pilih: kotak centang)
         Row(
-            Modifier.align(Alignment.CenterStart).height(28.dp)
-                .clip(RoundedCornerShape(topEnd = 14.dp, bottomEnd = 14.dp))
-                .background(cs.surfaceContainer)
-                .border(1.dp, cs.outlineVariant.copy(alpha = 0.5f), RoundedCornerShape(topEnd = 14.dp, bottomEnd = 14.dp))
-                .padding(start = 6.dp, end = 8.dp),
+            Modifier.align(Alignment.CenterStart).height(29.dp).clip(pillShape)
+                .background(if (multi && sel) Mint else cs.surfaceContainer)
+                .then(if (multi && sel) Modifier else Modifier.border(1.dp, cs.outlineVariant.copy(alpha = 0.5f), pillShape))
+                .clickable { if (multi) vm.select(l.id, additive = true) else vm.toggleVisible(l.id) }
+                .padding(start = 9.dp, end = 11.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                if (l.visible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff, null,
-                Modifier.size(23.dp).clickable { vm.toggleVisible(l.id) }, tint = cs.onSurface
-            )
-            Spacer(Modifier.width(10.dp))
-            if (l.locked) Icon(Icons.Rounded.Lock, null, Modifier.size(16.dp), tint = cs.onSurfaceVariant)
+            Box(Modifier.size(21.dp), contentAlignment = Alignment.Center) {
+                if (!multi) Icon(if (l.visible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff, null, Modifier.size(21.dp), tint = cs.onSurface)
+                else if (sel) Box(Modifier.size(18.dp).clip(CircleShape).background(Color(0xFF2A5A52)), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Rounded.Check, null, Modifier.size(12.dp), tint = Color.White)
+                }
+            }
+            Spacer(Modifier.width(11.dp))
+            if (l.locked) Icon(Icons.Rounded.Lock, null, Modifier.size(18.dp), tint = cs.onSurfaceVariant)
             else Box(Modifier.size(18.dp).clip(RoundedCornerShape(4.dp)).background(chipColor))
         }
     }

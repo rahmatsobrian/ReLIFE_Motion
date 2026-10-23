@@ -31,6 +31,7 @@ class EditorVM(val projectId: String) : ViewModel() {
     var playing by mutableStateOf(false)
     var loop by mutableStateOf(false)
     var selected by mutableStateOf<List<String>>(emptyList())
+    var multiMode by mutableStateOf(false)
     var redrawTick by mutableIntStateOf(0)
     var canUndo by mutableStateOf(false); private set
     var canRedo by mutableStateOf(false); private set
@@ -149,10 +150,11 @@ class EditorVM(val projectId: String) : ViewModel() {
     // ------------------------------------------------------------ selection
 
     fun select(id: String, additive: Boolean = false) {
+        if (additive) multiMode = true
         selected = if (additive) (if (id in selected) selected - id else selected + id) else listOf(id)
     }
-    fun clearSelection() { selected = emptyList() }
-    fun selectAll() { selected = project.layers.map { it.id } }
+    fun clearSelection() { selected = emptyList(); multiMode = false }
+    fun selectAll() { multiMode = true; selected = project.layers.map { it.id } }
 
     // ------------------------------------------------------------ layer creation
 
