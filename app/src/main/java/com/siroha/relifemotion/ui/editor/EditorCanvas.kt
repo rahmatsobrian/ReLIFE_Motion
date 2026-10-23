@@ -42,7 +42,7 @@ class Viewport {
     var pw by mutableIntStateOf(1080)
     var ph by mutableIntStateOf(1920)
 
-    val fit: Float get() = if (box.width == 0) 1f else min(box.width * 0.9f / pw, box.height * 0.9f / ph)
+    val fit: Float get() = if (box.width == 0) 1f else min(box.width * 0.98f / pw, box.height * 0.98f / ph)
     val scale: Float get() = fit * zoom
     val offX: Float get() = box.width / 2f + pan.x - pw * scale / 2f
     val offY: Float get() = box.height / 2f + pan.y - ph * scale / 2f

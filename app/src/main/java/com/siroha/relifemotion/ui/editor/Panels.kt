@@ -80,7 +80,7 @@ fun RailBtn(icon: ImageVector, onClick: () -> Unit, selected: Boolean = false, e
 fun PanelHost(vm: EditorVM, vp: Viewport, page: Page, onPage: (Page) -> Unit, onEffects: () -> Unit, onEditText: () -> Unit, modifier: Modifier) {
     val l = vm.sel
     if (l == null) { Box(modifier); return }
-    Box(modifier.background(MaterialTheme.colorScheme.surfaceContainerLow)) {
+    Box(modifier.background(MaterialTheme.colorScheme.surfaceContainer)) {
         when (page) {
             Page.MAIN -> MainPanel(vm, l, onPage, onEditText)
             Page.TRANSFORM, Page.EASING -> TransformPanel(vm, vp, l, page, onPage)
@@ -96,48 +96,42 @@ fun PanelHost(vm: EditorVM, vp: Viewport, page: Page, onPage: (Page) -> Unit, on
 }
 
 @Composable
-private fun MainPanel(vm: EditorVM, l: Layer, onPage: (Page) -> Unit, onEditText: () -> Unit) {
+private fun PTile(label: String?, icon: ImageVector, modifier: Modifier, shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(3.dp), onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
-    Column(Modifier.fillMaxSize().padding(horizontal = 10.dp, vertical = 6.dp)) {
-        Row(Modifier.fillMaxWidth().height(40.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            IconBtn(Icons.Rounded.Speed, { onPage(Page.TIME) }, box = 40.dp)
-            IconBtn(Icons.Rounded.AlignHorizontalLeft, { vm.align(0) }, box = 40.dp)
-            IconBtn(Icons.Rounded.AlignHorizontalCenter, { vm.align(1) }, box = 40.dp)
-            IconBtn(Icons.Rounded.AlignHorizontalRight, { vm.align(2) }, box = 40.dp)
-            IconBtn(Icons.Rounded.AlignVerticalCenter, { vm.align(4) }, box = 40.dp)
-            IconBtn(
-                if (l.volume > 0f) Icons.Rounded.VolumeUp else Icons.Rounded.VolumeOff,
-                { vm.setProp(l.id, "vol", if (l.volume > 0f) 0f else 1f) }, box = 40.dp
-            )
-        }
-        val tiles = buildList {
-            add(Triple("Color & Fill", Icons.Rounded.Palette, Page.FILL))
-            add(Triple("Border & Bayangan", Icons.Rounded.CropSquare, Page.BORDER))
-            add(Triple("Blending & Opacity", Icons.Rounded.Layers, Page.BLEND))
-            add(Triple("Move & Transform", Icons.Rounded.OpenWith, Page.TRANSFORM))
-            add(Triple("Edit Bentuk", Icons.Rounded.Edit, Page.SHAPE))
-            add(Triple("Presets", Icons.Rounded.Star, Page.PRESETS))
-            add(Triple("Efek", Icons.Rounded.AutoAwesome, Page.EFFECTS))
-        }
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            val all = if (l.type == LayerType.TEXT) listOf(null) + tiles else tiles
-            all.chunked(3).forEach { row ->
-                Row(Modifier.fillMaxWidth().height(62.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    row.forEach { t ->
-                        val label = t?.first ?: "Teks"
-                        val icon = t?.second ?: Icons.Rounded.TextFields
-                        Column(
-                            Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(12.dp)).background(cs.surfaceContainerHigh)
-                                .clickable { if (t == null) onEditText() else onPage(t.third) },
-                            horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
-                        ) {
-                            Icon(icon, null, Modifier.size(24.dp), tint = cs.onSurfaceVariant)
-                            Text(label, fontSize = 10.sp, color = cs.onSurfaceVariant, textAlign = TextAlign.Center)
-                        }
-                    }
-                    repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
-                }
+    Column(
+        modifier.clip(shape).background(cs.surfaceContainerHigh).clickable { onClick() },
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
+    ) {
+        Icon(icon, null, Modifier.size(24.dp), tint = cs.onSurfaceVariant)
+        if (label != null) Text(label, fontSize = 10.sp, color = cs.onSurfaceVariant, textAlign = TextAlign.Center, maxLines = 1)
+    }
+}
+
+@Composable
+private fun MainPanel(vm: EditorVM, l: Layer, onPage: (Page) -> Unit, onEditText: () -> Unit) {
+    Column(Modifier.fillMaxSize().padding(horizontal = 24.dp).padding(top = 17.dp, bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(11.dp)) {
+        Row(Modifier.fillMaxWidth().height(40.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            PTile(null, Icons.Rounded.Speed, Modifier.weight(1f).fillMaxHeight()) { onPage(Page.TIME) }
+            Row(Modifier.weight(3f).fillMaxHeight(), horizontalArrangement = Arrangement.spacedBy(1.dp)) {
+                PTile(null, Icons.Rounded.AlignHorizontalLeft, Modifier.weight(1f).fillMaxHeight()) { vm.align(0) }
+                PTile(null, Icons.Rounded.AlignHorizontalCenter, Modifier.weight(1f).fillMaxHeight()) { vm.align(1) }
+                PTile(null, Icons.Rounded.AlignHorizontalRight, Modifier.weight(1f).fillMaxHeight()) { vm.align(2) }
             }
+            PTile(null, if (l.volume > 0f) Icons.Rounded.VolumeUp else Icons.Rounded.VolumeOff, Modifier.weight(1f).fillMaxHeight()) {
+                vm.setProp(l.id, "vol", if (l.volume > 0f) 0f else 1f)
+            }
+        }
+        Row(Modifier.fillMaxWidth().height(63.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            PTile("Color & Fill", Icons.Rounded.Palette, Modifier.weight(1f).fillMaxHeight()) { onPage(Page.FILL) }
+            PTile("Border & Bayangan", Icons.Rounded.CropSquare, Modifier.weight(1f).fillMaxHeight()) { onPage(Page.BORDER) }
+            PTile("Blending & Opacity", Icons.Rounded.Layers, Modifier.weight(1f).fillMaxHeight()) { onPage(Page.BLEND) }
+        }
+        Row(Modifier.fillMaxWidth().height(61.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            PTile("Move & Transform", Icons.Rounded.OpenWith, Modifier.weight(1f).fillMaxHeight()) { onPage(Page.TRANSFORM) }
+            if (l.type == LayerType.TEXT) PTile("Teks", Icons.Rounded.TextFields, Modifier.weight(1f).fillMaxHeight()) { onEditText() }
+            PTile("Edit Bentuk", Icons.Rounded.Edit, Modifier.weight(1f).fillMaxHeight()) { onPage(Page.SHAPE) }
+            PTile("Presets", Icons.Rounded.Star, Modifier.weight(1f).fillMaxHeight()) { onPage(Page.PRESETS) }
+            PTile("Efek", Icons.Rounded.AutoAwesome, Modifier.weight(1f).fillMaxHeight()) { onPage(Page.EFFECTS) }
         }
     }
 }

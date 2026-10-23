@@ -13,7 +13,7 @@ class SettingsStore(ctx: Context) {
 
     var themeMode by mutableStateOf(runCatching { ThemeMode.valueOf(sp.getString("theme", "SYSTEM")!!) }.getOrDefault(ThemeMode.SYSTEM))
         private set
-    var dynamicColor by mutableStateOf(sp.getBoolean("dynamic", true)); private set
+    var dynamicColor by mutableStateOf(sp.getBoolean("dynamic", false)); private set
     var lowPreview by mutableStateOf(sp.getBoolean("lowPreview", true)); private set
     var demoMode by mutableStateOf(sp.getBoolean("demo", false)); private set
     var defaultDurSec by mutableStateOf(sp.getInt("durSec", 2)); private set

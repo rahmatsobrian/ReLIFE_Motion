@@ -8,7 +8,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.OpenInNew
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.*
+import com.siroha.relifemotion.ui.common.Glyph
+import com.siroha.relifemotion.ui.common.GlyphBtn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,6 +42,16 @@ import com.siroha.relifemotion.ui.common.DropdownField
 import com.siroha.relifemotion.ui.common.IconBtn
 import com.siroha.relifemotion.ui.home.BG_COLORS
 import com.siroha.relifemotion.ui.home.FPS_LIST
+
+@Composable
+private fun UnderlineField(value: String, onChange: (String) -> Unit, modifier: Modifier) {
+    val cs = MaterialTheme.colorScheme
+    Column(modifier) {
+        BasicTextField(value, onChange, Modifier.fillMaxWidth(), singleLine = true,
+            textStyle = TextStyle(color = cs.onSurface, fontSize = 14.sp), cursorBrush = SolidColor(cs.primary))
+        Box(Modifier.fillMaxWidth().height(1.dp).background(cs.onSurface.copy(alpha = 0.6f)))
+    }
+}
 
 private enum class DrawMode { NONE, FREEHAND, VECTOR }
 
@@ -114,27 +129,24 @@ fun EditorScreen(id: String, onBack: () -> Unit) {
     Column(Modifier.fillMaxSize().background(cs.surface).statusBarsPadding().navigationBarsPadding()) {
         // ------------------------------------------------ top bar
         when {
-            multi -> Row(Modifier.fillMaxWidth().height(52.dp).background(cs.primaryContainer), verticalAlignment = Alignment.CenterVertically) {
+            multi -> Row(Modifier.fillMaxWidth().height(46.dp).background(cs.primaryContainer), verticalAlignment = Alignment.CenterVertically) {
                 IconBtn(Icons.Rounded.Close, { vm.clearSelection() }, tint = cs.onPrimaryContainer)
                 Text("Memilih ${vm.selected.size} layer", Modifier.weight(1f), fontWeight = FontWeight.Bold, color = cs.onPrimaryContainer)
                 IconBtn(Icons.Rounded.ContentCopy, { vm.duplicateSelected() }, tint = cs.onPrimaryContainer)
                 IconBtn(Icons.Rounded.Delete, { vm.deleteSelected() }, tint = cs.onPrimaryContainer)
                 IconBtn(if (vm.playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, { vm.togglePlay() }, tint = cs.onPrimaryContainer)
             }
-            sel != null && page != Page.MAIN -> Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
+            sel != null && page != Page.MAIN -> Row(Modifier.fillMaxWidth().height(46.dp).background(cs.surfaceContainer), verticalAlignment = Alignment.CenterVertically) {
                 IconBtn(Icons.Rounded.ArrowBack, { page = if (page == Page.EASING) Page.TRANSFORM else Page.MAIN })
-                Text(pageTitle(page), fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                Text(pageTitle(page), fontWeight = FontWeight.Normal, fontSize = 14.sp)
             }
-            sel != null -> Row(Modifier.fillMaxWidth().height(52.dp), verticalAlignment = Alignment.CenterVertically) {
+            sel != null -> Row(Modifier.fillMaxWidth().height(46.dp).background(cs.surfaceContainer), verticalAlignment = Alignment.CenterVertically) {
                 IconBtn(Icons.Rounded.ArrowBack, { vm.clearSelection() })
-                BasicTextField(
-                    sel.name, { n -> vm.updateLayer(sel.id, "nm") { it.copy(name = n) } }, Modifier.weight(1f).padding(horizontal = 6.dp), singleLine = true,
-                    textStyle = TextStyle(color = cs.onSurface, fontSize = 15.sp), cursorBrush = SolidColor(cs.primary)
-                )
-                IconBtn(Icons.Rounded.ContentCopy, { vm.duplicateSelected() })
-                IconBtn(Icons.Rounded.Delete, { vm.deleteSelected() })
+                UnderlineField(sel.name, { n -> vm.updateLayer(sel.id, "nm") { it.copy(name = n) } }, Modifier.weight(1f).padding(horizontal = 4.dp))
+                GlyphBtn(Glyph.DUP_ADD, { vm.duplicateSelected() }, size = 24.dp)
+                IconBtn(Icons.Outlined.DeleteOutline, { vm.deleteSelected() }, size = 24.dp)
                 Box {
-                    IconBtn(Icons.Rounded.MoreVert, { moreMenu = true })
+                    GlyphBtn(Glyph.MORE_CIRCLE, { moreMenu = true }, size = 26.dp)
                     DropdownMenu(expanded = moreMenu, onDismissRequest = { moreMenu = false }) {
                         DropdownMenuItem(text = { Text("Salin") }, onClick = { moreMenu = false; vm.copySelected() })
                         DropdownMenuItem(text = { Text(if (sel.locked) "Buka kunci" else "Kunci layer") }, onClick = { moreMenu = false; vm.toggleLock(sel.id) })
@@ -146,12 +158,15 @@ fun EditorScreen(id: String, onBack: () -> Unit) {
                     }
                 }
             }
-            else -> Row(Modifier.fillMaxWidth().height(52.dp), verticalAlignment = Alignment.CenterVertically) {
-                IconBtn(Icons.Rounded.ArrowBack, onBack)
+            else -> Row(Modifier.fillMaxWidth().height(46.dp), verticalAlignment = Alignment.CenterVertically) {
+                GlyphBtn(Glyph.EXIT, onBack, size = 24.dp)
                 var rename by remember { mutableStateOf(false) }
-                Text(vm.project.name, Modifier.weight(1f).clickable { rename = true }, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                IconBtn(Icons.Rounded.Settings, { settingsOpen = true })
-                IconBtn(Icons.Rounded.Share, { vm.playing = false; exportOpen = true })
+                Column(Modifier.weight(1f).padding(horizontal = 4.dp).clickable { rename = true }) {
+                    Text(vm.project.name, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Box(Modifier.fillMaxWidth().height(1.dp).background(cs.onSurface.copy(alpha = 0.6f)))
+                }
+                IconBtn(Icons.Outlined.Settings, { settingsOpen = true }, size = 24.dp)
+                IconBtn(Icons.Outlined.OpenInNew, { vm.playing = false; exportOpen = true }, size = 24.dp)
                 if (rename) {
                     var v by remember { mutableStateOf(vm.project.name) }
                     AlertDialog(
@@ -165,13 +180,13 @@ fun EditorScreen(id: String, onBack: () -> Unit) {
         }
 
         // ------------------------------------------------ canvas
-        Box(Modifier.weight(1f).fillMaxWidth().background(cs.surfaceContainerLowest)) {
+        Box(Modifier.weight(1f).fillMaxWidth().background(cs.surface)) {
             EditorCanvas(vm, vp, gridOn, gridSize, interactive = drawMode == DrawMode.NONE, showSelection = showSel && drawMode == DrawMode.NONE)
             if (drawMode != DrawMode.NONE) DrawOverlay(drawState, vp)
 
             if (sel != null && drawMode == DrawMode.NONE) {
                 Box(
-                    Modifier.padding(8.dp).size(40.dp).clip(CircleShape).background(cs.surfaceContainerHigh).clickable {
+                    Modifier.padding(18.dp).size(30.dp).clip(RoundedCornerShape(4.dp)).background(cs.surfaceContainerHigh).clickable {
                         if (vp.zoom > 1.2f) vp.reset() else {
                             val c = Renderer.center(sel, vm.timeMs)
                             vp.zoom = 2.5f
@@ -180,7 +195,7 @@ fun EditorScreen(id: String, onBack: () -> Unit) {
                         }
                     },
                     contentAlignment = Alignment.Center
-                ) { Icon(Icons.Rounded.ZoomIn, null, tint = cs.onSurface) }
+                ) { Icon(Icons.Rounded.ZoomIn, null, Modifier.size(20.dp), tint = cs.onSurface) }
             }
 
             val showRail = drawMode == DrawMode.NONE && (sel == null || page == Page.MAIN || page == Page.EFFECTS || page == Page.FILL || page == Page.PRESETS || page == Page.TIME)
@@ -206,18 +221,32 @@ fun EditorScreen(id: String, onBack: () -> Unit) {
         }
 
         // ------------------------------------------------ transport
-        Row(Modifier.fillMaxWidth().height(46.dp).background(cs.surfaceContainerLow), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceEvenly) {
-            IconBtn(Icons.Rounded.Undo, { vm.undo() }, enabled = vm.canUndo)
-            IconBtn(Icons.Rounded.Redo, { vm.redo() }, enabled = vm.canRedo)
-            IconBtn(Icons.Rounded.SkipPrevious, { vm.seek(0L) })
-            IconBtn(if (vm.playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, { vm.togglePlay() }, size = 28.dp)
-            IconBtn(Icons.Rounded.SkipNext, { vm.seek(vm.totalMs) })
-            IconBtn(Icons.Rounded.Repeat, { vm.loop = !vm.loop }, tint = if (vm.loop) cs.primary else cs.onSurface)
-            IconBtn(Icons.Rounded.FitScreen, { vp.reset() })
+        Row(Modifier.fillMaxWidth().height(50.dp).background(cs.surface), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceEvenly) {
+            GlyphBtn(Glyph.UNDO, { vm.undo() }, enabled = vm.canUndo, size = 24.dp)
+            GlyphBtn(Glyph.REDO, { vm.redo() }, enabled = vm.canRedo, size = 24.dp)
+            GlyphBtn(Glyph.SKIP_START, { vm.seek(0L) }, size = 24.dp)
+            if (vm.playing) IconBtn(Icons.Rounded.Pause, { vm.togglePlay() }, size = 28.dp, box = 46.dp)
+            else GlyphBtn(Glyph.PLAY, { vm.togglePlay() }, size = 24.dp)
+            GlyphBtn(Glyph.SKIP_END, { vm.seek(vm.totalMs) }, size = 24.dp)
+            Box {
+                GlyphBtn(Glyph.DUP_ADD, { menu = true }, size = 24.dp)
+                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    DropdownMenuItem(text = { Text("Pilih Semua Layer") }, onClick = { menu = false; vm.selectAll() })
+                    DropdownMenuItem(text = { Text("Gandakan ${vm.selected.size} Layer") }, enabled = vm.selected.isNotEmpty(), onClick = { menu = false; vm.duplicateSelected() })
+                    DropdownMenuItem(text = { Text("Simpan preset") }, enabled = false, onClick = { menu = false })
+                    DropdownMenuItem(text = { Text("Salin ${vm.selected.size} Layer") }, enabled = vm.selected.isNotEmpty(), onClick = { menu = false; vm.copySelected() })
+                    DropdownMenuItem(text = { Text("Tempel ${vm.clipboard.size} Layer") }, enabled = vm.clipboard.isNotEmpty(), onClick = { menu = false; vm.paste() })
+                    DropdownMenuItem(text = { Text("Tempel Gaya") }, enabled = vm.clipboard.isNotEmpty(), onClick = { menu = false; vm.pasteStyle() })
+                    HorizontalDivider()
+                    DropdownMenuItem(text = { Text(if (vm.loop) "Putar ulang: aktif" else "Putar ulang: mati") }, onClick = { menu = false; vm.loop = !vm.loop })
+                }
+            }
+            GlyphBtn(Glyph.FIT, { vp.reset() }, size = 24.dp)
         }
 
         // ------------------------------------------------ area bawah
         val bottomMod = Modifier.fillMaxWidth()
+        val bottomH = 307.dp
         when {
             drawMode != DrawMode.NONE -> DrawPanel(
                 drawState,
@@ -226,7 +255,7 @@ fun EditorScreen(id: String, onBack: () -> Unit) {
                     drawMode = DrawMode.NONE
                 },
                 onCancel = { drawMode = DrawMode.NONE },
-                modifier = bottomMod.weight(0.9f)
+                modifier = bottomMod.height(bottomH)
             )
             addOpen -> AddPanel(
                 vm, { addOpen = false },
@@ -234,18 +263,18 @@ fun EditorScreen(id: String, onBack: () -> Unit) {
                 onFreehand = { addOpen = false; drawState = DrawState(false); drawMode = DrawMode.FREEHAND },
                 onVector = { addOpen = false; drawState = DrawState(true); drawMode = DrawMode.VECTOR },
                 onOpenMedia = { mediaPick = it }, onAudioAll = { audioAll = true },
-                modifier = bottomMod.weight(0.9f)
+                modifier = bottomMod.height(bottomH)
             )
             sel != null && !multi -> {
-                Timeline(vm, bottomMod.height(96.dp), showFab = false, onFab = {})
+                Timeline(vm, bottomMod.height(88.dp), showFab = false, onFab = {})
                 PanelHost(
                     vm, vp, page, { page = it }, { effectsOpen = true },
-                    { textTarget = TextTarget(sel.id) }, bottomMod.weight(0.8f)
+                    { textTarget = TextTarget(sel.id) }, bottomMod.height(bottomH - 88.dp)
                 )
             }
             multi -> {
-                Timeline(vm, bottomMod.weight(0.6f), showFab = false, onFab = {})
-                Row(Modifier.fillMaxWidth().height(52.dp).background(cs.surfaceContainerLow), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
+                Timeline(vm, bottomMod.height(88.dp), showFab = false, onFab = {})
+                Row(Modifier.fillMaxWidth().height(bottomH - 88.dp).background(cs.surfaceContainer), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.Top) {
                     IconBtn(Icons.Rounded.AlignHorizontalLeft, { vm.align(0) })
                     IconBtn(Icons.Rounded.AlignHorizontalCenter, { vm.align(1) })
                     IconBtn(Icons.Rounded.AlignHorizontalRight, { vm.align(2) })
@@ -254,19 +283,7 @@ fun EditorScreen(id: String, onBack: () -> Unit) {
                     IconBtn(Icons.Rounded.AlignVerticalBottom, { vm.align(5) })
                 }
             }
-            else -> Box(bottomMod.weight(0.9f)) {
-                Timeline(vm, Modifier.fillMaxSize(), showFab = true, onFab = { addOpen = true })
-                Box(Modifier.align(Alignment.TopEnd)) {
-                    IconBtn(Icons.Rounded.MoreVert, { menu = true }, size = 20.dp, box = 36.dp)
-                    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                        DropdownMenuItem(text = { Text("Pilih Semua Layer") }, onClick = { menu = false; vm.selectAll() })
-                        DropdownMenuItem(text = { Text("Gandakan ${vm.selected.size} Layer") }, enabled = vm.selected.isNotEmpty(), onClick = { menu = false; vm.duplicateSelected() })
-                        DropdownMenuItem(text = { Text("Salin ${vm.selected.size} Layer") }, enabled = vm.selected.isNotEmpty(), onClick = { menu = false; vm.copySelected() })
-                        DropdownMenuItem(text = { Text("Tempel ${vm.clipboard.size} Layer") }, enabled = vm.clipboard.isNotEmpty(), onClick = { menu = false; vm.paste() })
-                        DropdownMenuItem(text = { Text("Tempel Gaya") }, enabled = vm.clipboard.isNotEmpty(), onClick = { menu = false; vm.pasteStyle() })
-                    }
-                }
-            }
+            else -> Timeline(vm, bottomMod.height(bottomH), showFab = true, onFab = { addOpen = true })
         }
     }
 
