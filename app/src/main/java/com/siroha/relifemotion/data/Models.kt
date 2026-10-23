@@ -100,7 +100,8 @@ data class Layer(
     val volume: Float = 1f, val speed: Float = 1f,
     val points: List<Float> = emptyList(), val closed: Boolean = false, val brush: Float = 5f,
     val visible: Boolean = true, val locked: Boolean = false,
-    val mediaDurationMs: Long = 0L
+    val mediaDurationMs: Long = 0L,
+    val inMs: Long = 0L
 )
 
 const val STROKE_BREAK = 1e9f
@@ -162,7 +163,7 @@ private fun JSONObject.f(k: String, d: Float) = optDouble(k, d.toDouble()).toFlo
 
 fun Layer.toJson(): JSONObject = JSONObject().apply {
     put("id", id); put("type", type.name); put("name", name)
-    put("start", startMs); put("end", endMs)
+    put("start", startMs); put("end", endMs); put("in", inMs)
     put("shape", shape); put("w", w.toDouble()); put("h", h.toDouble())
     put("fill", fill); put("fillOn", fillOn); put("opacity", opacity.toDouble()); put("blend", blend)
     put("x", x.toDouble()); put("y", y.toDouble()); put("rot", rot.toDouble())
@@ -221,7 +222,7 @@ fun layerFromJson(o: JSONObject): Layer {
         id = o.optString("id", newId()),
         type = runCatching { LayerType.valueOf(o.optString("type", "SHAPE")) }.getOrDefault(LayerType.SHAPE),
         name = o.optString("name", "Layer"),
-        startMs = o.optLong("start", 0), endMs = o.optLong("end", 3000),
+        startMs = o.optLong("start", 0), endMs = o.optLong("end", 3000), inMs = o.optLong("in", 0),
         shape = o.optString("shape", "rect"), w = o.f("w", 300f), h = o.f("h", 300f),
         fill = o.optInt("fill", 0xFFD9EE8B.toInt()), fillOn = o.optBoolean("fillOn", true),
         opacity = o.f("opacity", 1f), blend = o.optString("blend", "Normal"),

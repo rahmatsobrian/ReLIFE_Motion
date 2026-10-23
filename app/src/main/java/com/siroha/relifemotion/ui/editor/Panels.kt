@@ -98,13 +98,13 @@ fun PanelHost(vm: EditorVM, vp: Viewport, page: Page, onPage: (Page) -> Unit, on
 @Composable
 private fun PTile(
     label: String?, icon: ImageVector?, modifier: Modifier, glyph: com.siroha.relifemotion.ui.common.Glyph? = null,
-    labelSize: androidx.compose.ui.unit.TextUnit = 12.sp, dim: Boolean = false, shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(4.dp), onClick: () -> Unit
+    labelSize: androidx.compose.ui.unit.TextUnit = 10.5.sp, dim: Boolean = false, shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(4.dp), onClick: () -> Unit
 ) {
     val cs = MaterialTheme.colorScheme
     val tint = cs.onSurfaceVariant.copy(alpha = if (dim) 0.45f else 1f)
     val body: @Composable ColumnScope.() -> Unit = {
-        if (glyph != null) com.siroha.relifemotion.ui.common.GlyphIcon(glyph, tint = cs.onSurface, size = 27.dp)
-        else if (icon != null) Icon(icon, null, Modifier.size(27.dp), tint = tint)
+        if (glyph != null) com.siroha.relifemotion.ui.common.GlyphIcon(glyph, tint = cs.onSurface, size = 24.dp)
+        else if (icon != null) Icon(icon, null, Modifier.size(23.dp), tint = tint)
         if (label != null) Text(label, fontSize = labelSize, color = tint, textAlign = TextAlign.Center, maxLines = 1)
     }
     if (label == null) Column(
@@ -119,27 +119,27 @@ private fun PTile(
 @Composable
 private fun MainPanel(vm: EditorVM, l: Layer, onPage: (Page) -> Unit, onEditText: () -> Unit) {
     val hasAudio = l.type == LayerType.AUDIO || l.type == LayerType.VIDEO
-    Column(Modifier.fillMaxSize().padding(horizontal = 25.dp).padding(top = 17.dp, bottom = 19.dp)) {
-        Row(Modifier.fillMaxWidth().height(43.dp), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+    Column(Modifier.fillMaxSize().padding(horizontal = 22.dp).padding(top = 15.dp, bottom = 17.dp)) {
+        Row(Modifier.fillMaxWidth().height(38.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             PTile(null, Icons.Rounded.Speed, Modifier.weight(1f).fillMaxHeight()) { onPage(Page.TIME) }
             Row(Modifier.weight(3f).fillMaxHeight(), horizontalArrangement = Arrangement.spacedBy(1.dp)) {
-                PTile(null, null, Modifier.weight(1f).fillMaxHeight(), glyph = com.siroha.relifemotion.ui.common.Glyph.ALIGN_L, shape = RoundedCornerShape(topStart = 4.dp, bottomStart = 4.dp)) { vm.align(0) }
-                PTile(null, null, Modifier.weight(1f).fillMaxHeight(), glyph = com.siroha.relifemotion.ui.common.Glyph.ALIGN_C, shape = RoundedCornerShape(0.dp)) { vm.align(1) }
-                PTile(null, null, Modifier.weight(1f).fillMaxHeight(), glyph = com.siroha.relifemotion.ui.common.Glyph.ALIGN_R, shape = RoundedCornerShape(topEnd = 4.dp, bottomEnd = 4.dp)) { vm.align(2) }
+                PTile(null, null, Modifier.weight(1f).fillMaxHeight(), glyph = com.siroha.relifemotion.ui.common.Glyph.ALIGN_L, shape = RoundedCornerShape(topStart = 4.dp, bottomStart = 4.dp)) { vm.trimStartToPlayhead() }
+                PTile(null, null, Modifier.weight(1f).fillMaxHeight(), glyph = com.siroha.relifemotion.ui.common.Glyph.ALIGN_C, shape = RoundedCornerShape(0.dp)) { vm.splitAtPlayhead() }
+                PTile(null, null, Modifier.weight(1f).fillMaxHeight(), glyph = com.siroha.relifemotion.ui.common.Glyph.ALIGN_R, shape = RoundedCornerShape(topEnd = 4.dp, bottomEnd = 4.dp)) { vm.trimEndToPlayhead() }
             }
             PTile(null, if (l.volume > 0f) Icons.Rounded.VolumeUp else Icons.Rounded.VolumeOff, Modifier.weight(1f).fillMaxHeight(), dim = !hasAudio) {
                 if (hasAudio) vm.setProp(l.id, "vol", if (l.volume > 0f) 0f else 1f)
             }
         }
-        Spacer(Modifier.height(12.dp))
-        Row(Modifier.fillMaxWidth().height(65.dp), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+        Spacer(Modifier.height(10.dp))
+        Row(Modifier.fillMaxWidth().height(57.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             PTile("Color & Fill", Icons.Rounded.Palette, Modifier.weight(1f).fillMaxHeight()) { onPage(Page.FILL) }
             PTile("Border & Bayangan", Icons.Rounded.CropSquare, Modifier.weight(1f).fillMaxHeight()) { onPage(Page.BORDER) }
             PTile("Blending & Opacity", Icons.Rounded.Layers, Modifier.weight(1f).fillMaxHeight()) { onPage(Page.BLEND) }
         }
-        Spacer(Modifier.height(8.dp))
-        Row(Modifier.fillMaxWidth().height(65.dp), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-            PTile("Move & Transform", Icons.Rounded.OpenWith, Modifier.weight(1f).fillMaxHeight(), labelSize = 9.sp) { onPage(Page.TRANSFORM) }
+        Spacer(Modifier.height(7.dp))
+        Row(Modifier.fillMaxWidth().height(57.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            PTile("Move & Transform", Icons.Rounded.OpenWith, Modifier.weight(1f).fillMaxHeight(), labelSize = 8.sp) { onPage(Page.TRANSFORM) }
             if (l.type == LayerType.TEXT) PTile("Teks", Icons.Rounded.TextFields, Modifier.weight(1f).fillMaxHeight()) { onEditText() }
             PTile("Edit Bentuk", Icons.Rounded.Edit, Modifier.weight(1f).fillMaxHeight()) { onPage(Page.SHAPE) }
             PTile("Presets", Icons.Rounded.Star, Modifier.weight(1f).fillMaxHeight()) { onPage(Page.PRESETS) }

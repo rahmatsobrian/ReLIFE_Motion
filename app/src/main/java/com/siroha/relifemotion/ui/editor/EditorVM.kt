@@ -152,7 +152,10 @@ class EditorVM(val projectId: String) : ViewModel() {
     fun select(id: String, additive: Boolean = false) {
         if (additive) multiMode = true
         selected = if (additive) (if (id in selected) selected - id else selected + id) else listOf(id)
+        if (additive && selected.isEmpty()) multiMode = false
     }
+    /** Tahan lama pada pil mata: masuk mode pilih dan tambahkan layer ke seleksi. */
+    fun beginMulti(id: String) { multiMode = true; if (id !in selected) selected = selected + id }
     fun clearSelection() { selected = emptyList(); multiMode = false }
     fun selectAll() { multiMode = true; selected = project.layers.map { it.id } }
 
@@ -317,6 +320,56 @@ class EditorVM(val projectId: String) : ViewModel() {
     fun toggleVisible(id: String) = updateLayer(id) { it.copy(visible = !it.visible) }
     fun toggleLock(id: String) = updateLayer(id) { it.copy(locked = !it.locked) }
 
+    /** Potong layer terpilih di posisi playhead menjadi dua bagian. */
+    fun splitAtPlayhead() {
+        val t = timeMs
+        val ids = selected.toSet()
+        val hit = project.layers.filter { it.id in ids && t > it.startMs + 50 && t < it.endMs - 50 }.map { it.id }.toSet()
+        if (hit.isEmpty()) return
+        edit { p ->
+            p.copy(layers = p.layers.flatMap { l ->
+                if (l.id in hit) {
+                    val right = l.copy(id = newId(), startMs = t, inMs = l.inMs + ((t - l.startMs) * l.speed).toLong())
+                    listOf(right, l.copy(endMs = t))
+                } else listOf(l)
+            })
+        }
+    }
+
+    /** Buang bagian kiri layer (sebelum playhead). */
+    fun trimStartToPlayhead() {
+        val t = timeMs
+        updateSelected { l ->
+            if (t > l.startMs + 50 && t < l.endMs) l.copy(startMs = t, inMs = l.inMs + ((t - l.startMs) * l.speed).toLong()) else l
+        }
+    }
+
+    /** Buang bagian kanan layer (setelah playhead). */
+    fun trimEndToPlayhead() {
+        val t = timeMs
+        updateSelected { l -> if (t > l.startMs + 50 && t < l.endMs) l.copy(endMs = t) else l }
+    }
+
+    /** Lompat ke awal layer terpilih jika playhead ada di dalamnya, selain itu ke awal video. */
+    fun jumpToStart() {
+        val ls = selLayers
+        if (ls.isNotEmpty()) {
+            val s = ls.minOf { it.startMs }; val e = ls.maxOf { it.endMs }
+            if (timeMs > s && timeMs <= e) { seek(s); return }
+        }
+        seek(0L)
+    }
+
+    /** Lompat ke akhir layer terpilih jika playhead ada di dalamnya, selain itu ke akhir video. */
+    fun jumpToEnd() {
+        val ls = selLayers
+        if (ls.isNotEmpty()) {
+            val s = ls.minOf { it.startMs }; val e = ls.maxOf { it.endMs }
+            if (timeMs >= s && timeMs < e) { seek(e); return }
+        }
+        seek(totalMs)
+    }
+
     fun moveLayerTimes(id: String, start: Long, end: Long) {
         updateLayer(id, "time-$id") { it.copy(startMs = max(0L, start), endMs = max(start + 100L, end)) }
     }
@@ -369,7 +422,7 @@ class EditorVM(val projectId: String) : ViewModel() {
             mp.setDataSource(Graph.app, Uri.parse(l.uri))
             mp.setOnPreparedListener {
                 runCatching {
-                    it.seekTo(((timeMs - l.startMs) * l.speed).toInt().coerceAtLeast(0))
+                    it.seekTo((((timeMs - l.startMs) * l.speed).toInt().coerceAtLeast(0) + l.inMs).toInt())
                     val v = l.valueAt("vol", timeMs).coerceIn(0f, 1f)
                     it.setVolume(v, v)
                     if (playing) it.start()

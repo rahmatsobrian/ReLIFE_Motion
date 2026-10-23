@@ -139,7 +139,7 @@ fun GlyphIcon(g: Glyph, modifier: Modifier = Modifier, tint: Color = MaterialThe
 
 @Composable
 fun GlyphBtn(g: Glyph, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true,
-             tint: Color = MaterialTheme.colorScheme.onSurface, box: Dp = 46.dp, size: Dp = 22.dp) {
+             tint: Color = MaterialTheme.colorScheme.onSurface, box: Dp = 40.dp, size: Dp = 22.dp) {
     Box(modifier.size(box).clip(CircleShape).clickable(enabled = enabled) { onClick() }, contentAlignment = Alignment.Center) {
         GlyphIcon(g, tint = if (enabled) tint else tint.copy(alpha = 0.3f), size = size)
     }

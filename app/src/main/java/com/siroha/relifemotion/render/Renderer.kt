@@ -522,7 +522,7 @@ object Renderer {
                 val bmp: Bitmap? = if (l.type == LayerType.IMAGE) {
                     l.uri?.let { MediaCache.image(it) }
                 } else {
-                    val srcMs = ((t - l.startMs) * l.speed).toLong().coerceAtLeast(0L)
+                    val srcMs = ((t - l.startMs) * l.speed).toLong().coerceAtLeast(0L) + l.inMs
                     l.uri?.let { VideoFrames.frame(it, srcMs, rc.export, rc.invalidate) }
                 }
                 val rect = Path().also { it.addRect(-l.w / 2, -l.h / 2, l.w / 2, l.h / 2, Path.Direction.CW) }

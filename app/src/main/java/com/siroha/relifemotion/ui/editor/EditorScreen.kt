@@ -53,7 +53,7 @@ private fun UnderlineField(value: String, onChange: (String) -> Unit, modifier: 
     val cs = MaterialTheme.colorScheme
     Column(modifier) {
         BasicTextField(value, onChange, Modifier.fillMaxWidth(), singleLine = true,
-            textStyle = TextStyle(color = cs.onSurface, fontSize = 14.sp), cursorBrush = SolidColor(cs.primary))
+            textStyle = TextStyle(color = cs.onSurface, fontSize = 13.sp), cursorBrush = SolidColor(cs.primary))
         Box(Modifier.fillMaxWidth().padding(top = 3.dp).height(1.dp).background(cs.onSurface.copy(alpha = 0.3f)))
     }
 }
@@ -138,27 +138,27 @@ fun EditorScreen(id: String, onBack: () -> Unit) {
     Column(Modifier.fillMaxSize().background(cs.surface).statusBarsPadding().navigationBarsPadding()) {
         // ------------------------------------------------ top bar (tinggi 48dp)
         when {
-            multi -> Row(Modifier.fillMaxWidth().height(48.dp).background(mint), verticalAlignment = Alignment.CenterVertically) {
-                GlyphBtn(Glyph.CLOSE, { vm.clearSelection() }, tint = Color.Black, size = 18.dp)
-                Text("Memilih ${vm.selected.size} layer", Modifier.weight(1f), color = Color.Black, fontSize = 15.sp, fontWeight = FontWeight.Medium)
-                GlyphBtn(Glyph.DASH_A, { vm.duplicateSelected() }, tint = Color.Black, size = 27.dp)
-                GlyphBtn(Glyph.DASH_B, { vm.copySelected() }, tint = Color.Black, size = 27.dp)
-                GlyphBtn(Glyph.DASH_C, { vm.paste() }, tint = Color.Black, size = 27.dp)
-                GlyphBtn(Glyph.TRASH, { vm.deleteSelected() }, tint = Color.Black, size = 26.dp)
-                if (vm.playing) IconBtn(Icons.Rounded.Pause, { vm.togglePlay() }, tint = Color.Black, size = 26.dp, box = 46.dp)
-                else GlyphBtn(Glyph.PLAY, { vm.togglePlay() }, tint = Color.Black, size = 22.dp)
+            multi -> Row(Modifier.fillMaxWidth().height(42.dp).background(mint), verticalAlignment = Alignment.CenterVertically) {
+                GlyphBtn(Glyph.CLOSE, { vm.clearSelection() }, tint = Color.Black, size = 16.dp)
+                Text("Memilih ${vm.selected.size} layer", Modifier.weight(1f), color = Color.Black, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                GlyphBtn(Glyph.DASH_A, { vm.duplicateSelected() }, tint = Color.Black, size = 23.dp)
+                GlyphBtn(Glyph.DASH_B, { vm.copySelected() }, tint = Color.Black, size = 23.dp)
+                GlyphBtn(Glyph.DASH_C, { vm.paste() }, tint = Color.Black, size = 23.dp)
+                GlyphBtn(Glyph.TRASH, { vm.deleteSelected() }, tint = Color.Black, size = 22.dp)
+                if (vm.playing) IconBtn(Icons.Rounded.Pause, { vm.togglePlay() }, tint = Color.Black, size = 22.dp, box = 46.dp)
+                else GlyphBtn(Glyph.PLAY, { vm.togglePlay() }, tint = Color.Black, size = 20.dp)
             }
-            sel != null && page != Page.MAIN -> Row(Modifier.fillMaxWidth().height(48.dp).background(cs.surfaceContainer), verticalAlignment = Alignment.CenterVertically) {
-                IconBtn(Icons.Rounded.ArrowBack, { page = if (page == Page.EASING) Page.TRANSFORM else Page.MAIN }, tint = cs.onSurface)
+            sel != null && page != Page.MAIN -> Row(Modifier.fillMaxWidth().height(42.dp).background(cs.surfaceContainer), verticalAlignment = Alignment.CenterVertically) {
+                IconBtn(Icons.Rounded.ArrowBack, { page = if (page == Page.EASING) Page.TRANSFORM else Page.MAIN }, tint = cs.onSurface, box = 40.dp)
                 Text(pageTitle(page), fontWeight = FontWeight.Normal, fontSize = 15.sp, color = cs.onSurface)
             }
-            sel != null -> Row(Modifier.fillMaxWidth().height(48.dp).background(cs.surfaceContainer), verticalAlignment = Alignment.CenterVertically) {
-                IconBtn(Icons.Rounded.ArrowBack, { vm.clearSelection() }, tint = cs.onSurface)
+            sel != null -> Row(Modifier.fillMaxWidth().height(42.dp).background(cs.surfaceContainer), verticalAlignment = Alignment.CenterVertically) {
+                IconBtn(Icons.Rounded.ArrowBack, { vm.clearSelection() }, tint = cs.onSurface, box = 40.dp)
                 UnderlineField(sel.name, { n -> vm.updateLayer(sel.id, "nm") { it.copy(name = n) } }, Modifier.weight(1f).padding(horizontal = 4.dp))
-                GlyphBtn(Glyph.DUP_DASH, { vm.duplicateSelected() }, size = 27.dp)
-                GlyphBtn(Glyph.TRASH, { vm.deleteSelected() }, size = 26.dp)
+                GlyphBtn(Glyph.DUP_DASH, { vm.duplicateSelected() }, size = 23.dp)
+                GlyphBtn(Glyph.TRASH, { vm.deleteSelected() }, size = 22.dp)
                 Box {
-                    GlyphBtn(Glyph.MORE_CIRCLE, { moreMenu = true }, size = 28.dp)
+                    GlyphBtn(Glyph.MORE_CIRCLE, { moreMenu = true }, size = 24.dp)
                     DropdownMenu(expanded = moreMenu, onDismissRequest = { moreMenu = false }) {
                         DropdownMenuItem(text = { Text("Salin") }, onClick = { moreMenu = false; vm.copySelected() })
                         DropdownMenuItem(text = { Text(if (sel.locked) "Buka kunci" else "Kunci layer") }, onClick = { moreMenu = false; vm.toggleLock(sel.id) })
@@ -170,15 +170,15 @@ fun EditorScreen(id: String, onBack: () -> Unit) {
                     }
                 }
             }
-            else -> Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
-                GlyphBtn(Glyph.EXIT, onBack, size = 23.dp)
+            else -> Row(Modifier.fillMaxWidth().height(42.dp), verticalAlignment = Alignment.CenterVertically) {
+                GlyphBtn(Glyph.EXIT, onBack, size = 20.dp)
                 var rename by remember { mutableStateOf(false) }
                 Column(Modifier.weight(1f).padding(horizontal = 4.dp).clickable { rename = true }) {
-                    Text(vm.project.name, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = cs.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(vm.project.name, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = cs.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Box(Modifier.fillMaxWidth().padding(top = 3.dp).height(1.dp).background(cs.onSurface.copy(alpha = 0.25f)))
                 }
-                IconBtn(Icons.Outlined.Settings, { settingsOpen = true }, size = 24.dp, box = 46.dp)
-                IconBtn(Icons.Outlined.OpenInNew, { vm.playing = false; exportOpen = true }, size = 24.dp, box = 46.dp)
+                IconBtn(Icons.Outlined.Settings, { settingsOpen = true }, size = 22.dp, box = 40.dp)
+                IconBtn(Icons.Outlined.OpenInNew, { vm.playing = false; exportOpen = true }, size = 22.dp, box = 40.dp)
                 if (rename) {
                     var v by remember { mutableStateOf(vm.project.name) }
                     AlertDialog(
@@ -198,7 +198,7 @@ fun EditorScreen(id: String, onBack: () -> Unit) {
 
             if ((sel != null || multi) && drawMode == DrawMode.NONE && !railOpen) {
                 Box(
-                    Modifier.padding(18.dp).size(32.dp).clip(RoundedCornerShape(5.dp)).background(cs.surfaceContainerHigh).clickable {
+                    Modifier.padding(16.dp).size(28.dp).clip(RoundedCornerShape(5.dp)).background(cs.surfaceContainerHigh).clickable {
                         val s0 = sel
                         if (vp.zoom > 1.2f || s0 == null) vp.reset() else {
                             val c = Renderer.center(s0, vm.timeMs)
@@ -208,20 +208,20 @@ fun EditorScreen(id: String, onBack: () -> Unit) {
                         }
                     },
                     contentAlignment = Alignment.Center
-                ) { Icon(Icons.Rounded.ZoomIn, null, Modifier.size(22.dp), tint = cs.onSurface) }
+                ) { Icon(Icons.Rounded.ZoomIn, null, Modifier.size(20.dp), tint = cs.onSurface) }
             }
 
             if (railOpen && drawMode == DrawMode.NONE) {
                 if (gridOn) {
-                    Box(Modifier.align(Alignment.TopEnd).padding(end = 66.dp, top = 8.dp).width(44.dp).height(150.dp).clip(RoundedCornerShape(10.dp)).background(cs.surfaceContainerHigh)) {
+                    Box(Modifier.align(Alignment.TopEnd).padding(end = 57.dp, top = 8.dp).width(44.dp).height(150.dp).clip(RoundedCornerShape(10.dp)).background(cs.surfaceContainerHigh)) {
                         com.siroha.relifemotion.ui.common.VerticalBar(gridSize, { gridSize = it.toInt().toFloat().coerceAtLeast(5f) }, 10f, 200f, Modifier.fillMaxSize().padding(horizontal = 6.dp, vertical = 6.dp))
                         Text("${gridSize.toInt()}", Modifier.align(Alignment.BottomCenter), fontSize = 10.sp, fontWeight = FontWeight.Bold, color = cs.onSurface)
                     }
                 }
-                Box(Modifier.align(Alignment.TopEnd).fillMaxHeight().width(59.dp).background(cs.surfaceContainerHighest)) {
+                Box(Modifier.align(Alignment.TopEnd).fillMaxHeight().width(51.dp).background(cs.surfaceContainerHighest)) {
                     Column(Modifier.fillMaxWidth()) {
                         @Composable fun R(icon: androidx.compose.ui.graphics.vector.ImageVector, on: Boolean, click: () -> Unit) {
-                            Box(Modifier.fillMaxWidth().height(72.dp).clickable { click() }, contentAlignment = Alignment.Center) {
+                            Box(Modifier.fillMaxWidth().height(63.dp).clickable { click() }, contentAlignment = Alignment.Center) {
                                 Icon(icon, null, Modifier.size(26.dp), tint = if (on) cs.primaryContainer else Color.White)
                             }
                         }
@@ -231,7 +231,7 @@ fun EditorScreen(id: String, onBack: () -> Unit) {
                         R(Icons.Outlined.VideocamOff, false) { vp.reset() }
                     }
                     Column(
-                        Modifier.align(Alignment.BottomCenter).padding(bottom = 6.dp).width(37.dp).height(119.dp)
+                        Modifier.align(Alignment.BottomCenter).padding(bottom = 6.dp).width(32.dp).height(104.dp)
                             .clip(RoundedCornerShape(8.dp)).background(cs.surface),
                         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.SpaceEvenly
                     ) {
@@ -244,15 +244,15 @@ fun EditorScreen(id: String, onBack: () -> Unit) {
         }
 
         // ------------------------------------------------ transport (7 kolom sama lebar)
-        Box(Modifier.fillMaxWidth().height(52.dp).background(cs.surface)) {
+        Box(Modifier.fillMaxWidth().height(46.dp).background(cs.surface)) {
             Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
                 @Composable fun Cell(content: @Composable () -> Unit) { Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.Center) { content() } }
                 Cell { GlyphBtn(Glyph.UNDO, { vm.undo() }, enabled = vm.canUndo, size = 24.dp) }
                 Cell { GlyphBtn(Glyph.REDO, { vm.redo() }, enabled = vm.canRedo, size = 24.dp) }
-                Cell { GlyphBtn(Glyph.SKIP_START, { vm.seek(0L) }, size = 24.dp) }
+                Cell { GlyphBtn(Glyph.SKIP_START, { vm.jumpToStart() }, size = 24.dp) }
                 Cell {
                     Box(
-                        Modifier.size(46.dp).clip(CircleShape).pointerInput(Unit) {
+                        Modifier.size(42.dp).clip(CircleShape).pointerInput(Unit) {
                             detectTapGestures(onTap = { vm.togglePlay() }, onLongPress = { vm.loop = !vm.loop })
                         },
                         contentAlignment = Alignment.Center
@@ -261,16 +261,16 @@ fun EditorScreen(id: String, onBack: () -> Unit) {
                         else com.siroha.relifemotion.ui.common.GlyphIcon(Glyph.PLAY, tint = if (vm.loop) cs.primaryContainer else cs.onSurface, size = 24.dp)
                     }
                 }
-                Cell { GlyphBtn(Glyph.SKIP_END, { vm.seek(vm.totalMs) }, size = 24.dp) }
+                Cell { GlyphBtn(Glyph.SKIP_END, { vm.jumpToEnd() }, size = 24.dp) }
                 Cell { GlyphBtn(Glyph.DUP_ADD, { menu = true }, size = 24.dp) }
                 Cell { GlyphBtn(Glyph.FIT, { railOpen = !railOpen }, size = 24.dp, tint = if (railOpen) cs.primaryContainer else cs.onSurface) }
             }
-            if (menu) TransportMenu(vm, with(density) { 52.dp.roundToPx() }) { menu = false }
+            if (menu) TransportMenu(vm, with(density) { 46.dp.roundToPx() }) { menu = false }
         }
 
         // ------------------------------------------------ area bawah (319dp = timeline 91 + panel 228)
         val bottomMod = Modifier.fillMaxWidth()
-        val bottomH = 319.dp
+        val bottomH = 280.dp
         when {
             drawMode != DrawMode.NONE -> DrawPanel(
                 drawState,
@@ -292,17 +292,17 @@ fun EditorScreen(id: String, onBack: () -> Unit) {
             multi -> Box(bottomMod.height(bottomH)) {
                 Timeline(vm, Modifier.fillMaxSize(), showFab = false, onFab = {})
                 Row(
-                    Modifier.align(Alignment.BottomCenter).padding(start = 7.dp, end = 7.dp, bottom = 7.dp).fillMaxWidth().height(48.dp)
+                    Modifier.align(Alignment.BottomCenter).padding(start = 6.dp, end = 6.dp, bottom = 6.dp).fillMaxWidth().height(42.dp)
                         .clip(RoundedCornerShape(12.dp)).background(cs.surfaceContainerHighest),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    GlyphBtn(Glyph.ALIGN_L, { vm.align(0) }, size = 26.dp)
-                    GlyphBtn(Glyph.ALIGN_C, { vm.align(1) }, size = 26.dp)
-                    GlyphBtn(Glyph.ALIGN_R, { vm.align(2) }, size = 26.dp)
+                    GlyphBtn(Glyph.ALIGN_L, { vm.trimStartToPlayhead() }, size = 24.dp)
+                    GlyphBtn(Glyph.ALIGN_C, { vm.splitAtPlayhead() }, size = 24.dp)
+                    GlyphBtn(Glyph.ALIGN_R, { vm.trimEndToPlayhead() }, size = 24.dp)
                     Spacer(Modifier.weight(1f))
                     for (k in 0..2) {
-                        Box(Modifier.size(46.dp).clickable { vm.align(3 + k) }, contentAlignment = Alignment.Center) {
-                            androidx.compose.foundation.Canvas(Modifier.size(width = 30.dp, height = 25.dp)) {
+                        Box(Modifier.size(40.dp).clickable { vm.align(k) }, contentAlignment = Alignment.Center) {
+                            androidx.compose.foundation.Canvas(Modifier.size(width = 26.dp, height = 22.dp)) {
                                 drawRoundRect(Color(0xFF6C7089), size = size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()))
                                 val bw = listOf(0.8f, 0.55f, 0.35f)
                                 for (r in 0..2) {
@@ -316,10 +316,10 @@ fun EditorScreen(id: String, onBack: () -> Unit) {
                 }
             }
             sel != null -> {
-                Timeline(vm, bottomMod.height(91.dp), showFab = false, onFab = {})
+                Timeline(vm, bottomMod.height(80.dp), showFab = false, onFab = {})
                 PanelHost(
                     vm, vp, page, { page = it }, { effectsOpen = true },
-                    { textTarget = TextTarget(sel.id) }, bottomMod.height(bottomH - 91.dp)
+                    { textTarget = TextTarget(sel.id) }, bottomMod.height(bottomH - 80.dp)
                 )
             }
             else -> Timeline(vm, bottomMod.height(bottomH), showFab = true, onFab = { addOpen = true })

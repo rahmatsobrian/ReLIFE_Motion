@@ -44,7 +44,7 @@ private fun DrawScope.arrow(tint: Color, cx: Float, cy: Float, r: Float, out: Bo
 
 @Composable
 private fun MIcon(kind: Int, tint: Color) {
-    Box(Modifier.size(28.dp)) {
+    Box(Modifier.size(23.dp)) {
         Canvas(Modifier.fillMaxSize()) {
             val w = size.width; val h = size.height
             val st = Stroke(1.6.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
@@ -70,7 +70,7 @@ private fun MIcon(kind: Int, tint: Color) {
                 }
             }
         }
-        if (kind == 3 || kind == 5) Text("S", Modifier.align(if (kind == 3) Alignment.BottomStart else Alignment.TopEnd).padding(start = 4.dp, bottom = 2.dp, end = 3.dp), color = tint, fontSize = 11.sp)
+        if (kind == 3 || kind == 5) Text("S", Modifier.align(if (kind == 3) Alignment.BottomStart else Alignment.TopEnd).padding(start = 4.dp, bottom = 2.dp, end = 3.dp), color = tint, fontSize = 9.sp)
     }
 }
 
@@ -78,19 +78,19 @@ private fun MIcon(kind: Int, tint: Color) {
 private fun MRow(kind: Int, label: String, sub: String? = null, enabled: Boolean = true, badge: Boolean = false, chevron: Boolean = false, onClick: () -> Unit) {
     val c = if (enabled) MenuOn else MenuOff
     Row(
-        Modifier.fillMaxWidth().height(if (sub != null) 58.dp else 46.dp).clickable(enabled = enabled) { onClick() }.padding(start = 17.dp, end = 14.dp),
+        Modifier.fillMaxWidth().height(if (sub != null) 48.dp else 40.dp).clickable(enabled = enabled) { onClick() }.padding(start = 16.dp, end = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         MIcon(kind, c)
-        Spacer(Modifier.width(21.dp))
+        Spacer(Modifier.width(15.dp))
         Column(Modifier.weight(1f)) {
-            Text(label, color = c, fontSize = 15.sp, maxLines = 1)
-            if (sub != null) Text(sub, color = c, fontSize = 10.sp, maxLines = 1)
+            Text(label, color = c, fontSize = 12.5.sp, maxLines = 1)
+            if (sub != null) Text(sub, color = c, fontSize = 8.5.sp, maxLines = 1)
         }
-        if (badge) Box(Modifier.clip(RoundedCornerShape(6.dp)).background(Color(0xFFF7CF55)).padding(horizontal = 6.dp, vertical = 2.dp)) {
-            Text("NEW", color = Color(0xFF2B2A20), fontSize = 11.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+        if (badge) Box(Modifier.clip(RoundedCornerShape(6.dp)).background(Color(0xFFF7CF55)).padding(horizontal = 5.dp, vertical = 1.dp)) {
+            Text("NEW", color = Color(0xFF2B2A20), fontSize = 9.5.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
         }
-        if (chevron) Canvas(Modifier.size(14.dp)) {
+        if (chevron) Canvas(Modifier.size(12.dp)) {
             val p = androidx.compose.ui.graphics.Path().apply { moveTo(size.width * 0.3f, size.height * 0.1f); lineTo(size.width * 0.75f, size.height * 0.5f); lineTo(size.width * 0.3f, size.height * 0.9f) }
             drawPath(p, c, style = Stroke(1.5.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
         }
@@ -103,7 +103,7 @@ fun TransportMenu(vm: EditorVM, offsetYPx: Int, onDismiss: () -> Unit) {
     val n = vm.selected.size
     Popup(alignment = Alignment.TopEnd, offset = IntOffset(0, offsetYPx), onDismissRequest = onDismiss, properties = PopupProperties(focusable = true)) {
         Column(
-            Modifier.width(286.dp).clip(RoundedCornerShape(topStart = 14.dp, bottomStart = 14.dp)).background(MenuBg).padding(vertical = 4.dp)
+            Modifier.width(250.dp).clip(RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp)).background(MenuBg).padding(vertical = 3.dp)
         ) {
             MRow(0, "Pilih Semua Layer") { onDismiss(); vm.selectAll() }
             MRow(1, "Gandakan $n Layer", enabled = n > 0) { onDismiss(); vm.duplicateSelected() }
