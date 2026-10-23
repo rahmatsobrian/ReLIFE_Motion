@@ -3,6 +3,7 @@ package com.siroha.relifemotion.ui.editor
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -252,7 +253,7 @@ fun EditorScreen(id: String, onBack: () -> Unit) {
                 Cell {
                     Box(
                         Modifier.size(46.dp).clip(CircleShape).pointerInput(Unit) {
-                            androidx.compose.foundation.gestures.detectTapGestures(onTap = { vm.togglePlay() }, onLongPress = { vm.loop = !vm.loop })
+                            detectTapGestures(onTap = { vm.togglePlay() }, onLongPress = { vm.loop = !vm.loop })
                         },
                         contentAlignment = Alignment.Center
                     ) {
