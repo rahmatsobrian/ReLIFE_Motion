@@ -32,6 +32,7 @@ class EditorVM(val projectId: String) : ViewModel() {
     var loop by mutableStateOf(false)
     var selected by mutableStateOf<List<String>>(emptyList())
     var multiMode by mutableStateOf(false)
+    var reorderId by mutableStateOf<String?>(null)
     var redrawTick by mutableIntStateOf(0)
     var canUndo by mutableStateOf(false); private set
     var canRedo by mutableStateOf(false); private set
@@ -154,6 +155,20 @@ class EditorVM(val projectId: String) : ViewModel() {
         selected = if (additive) (if (id in selected) selected - id else selected + id) else listOf(id)
         if (additive && selected.isEmpty()) multiMode = false
     }
+    /** Urutkan layer: mulai, pindah ke indeks, selesai (satu entri undo selama digeser). */
+    fun beginReorder(id: String) { reorderId = id; lastTag = "" }
+    fun reorderTo(id: String, to: Int) {
+        val i = project.layers.indexOfFirst { it.id == id }
+        if (i < 0 || i == to) return
+        edit("reorder") { p ->
+            val m = p.layers.toMutableList()
+            val l = m.removeAt(i)
+            m.add(to.coerceIn(0, m.size), l)
+            p.copy(layers = m)
+        }
+    }
+    fun endReorder() { reorderId = null; lastTag = "" }
+
     /** Tahan lama pada pil mata: masuk mode pilih dan tambahkan layer ke seleksi. */
     fun beginMulti(id: String) { multiMode = true; if (id !in selected) selected = selected + id }
     fun clearSelection() { selected = emptyList(); multiMode = false }

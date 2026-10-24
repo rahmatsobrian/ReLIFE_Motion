@@ -47,6 +47,13 @@ import com.siroha.relifemotion.data.fmtTime
 import com.siroha.relifemotion.ui.common.Diamond
 import com.siroha.relifemotion.ui.common.Glyph
 import com.siroha.relifemotion.ui.common.GlyphIcon
+import androidx.compose.animation.core.AnimationState
+import androidx.compose.animation.core.animateDecay
+import androidx.compose.animation.core.exponentialDecay
+import androidx.compose.foundation.gestures.awaitLongPressOrCancellation
+import androidx.compose.ui.input.pointer.util.VelocityTracker
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -80,11 +87,82 @@ fun Timeline(vm: EditorVM, modifier: Modifier, showFab: Boolean, onFab: () -> Un
     val single = vm.sel
     val lanes = if (!multi && single != null) listOf(single) else vm.project.layers
 
+    val lanesS by rememberUpdatedState(lanes)
+    val vScroll = rememberScrollState()
+    val scope = rememberCoroutineScope()
+    val flingRef = remember { arrayOfNulls<Job>(1) }
+
     Box(
         modifier.background(cs.surface).pointerInput(Unit) {
+            val laneH = 28.dp.toPx()
+            val top = 45.dp.toPx()
+            val pillW = 72.dp.toPx()
+            val barPad = 26.dp.toPx()
+            fun laneAt(y: Float): Int = Math.floor(((y - top + vScroll.value) / laneH).toDouble()).toInt()
             awaitEachGesture {
                 val down = awaitFirstDown(requireUnconsumed = false)
-                var moved = false; var consumedAny = false; var multiTouch = false
+                flingRef[0]?.cancel()
+                val tracker = VelocityTracker()
+                tracker.addPosition(down.uptimeMillis, down.position)
+                val cx = size.width / 2f
+
+                // ---- area lajur: tahan di pil = pilih banyak, tahan di area kosong = urutkan layer
+                val lanesNow = lanesS
+                val idx0 = laneAt(down.position.y)
+                val inLane = down.position.y >= top && idx0 in lanesNow.indices
+                var tapped = false
+                if (inLane) {
+                    val l0 = lanesNow[idx0]
+                    val bx = cx + (l0.startMs - vmS.timeMs) * pxPerMsS
+                    val bw = (l0.endMs - l0.startMs) * pxPerMsS
+                    val inPill = down.position.x < pillW
+                    val onBar = down.position.x in (bx - barPad)..(bx + bw + barPad)
+                    if (inPill || !onBar) {
+                        val lp = awaitLongPressOrCancellation(down.id)
+                        if (lp != null) {
+                            if (inPill) {
+                                vmS.beginMulti(l0.id)
+                                var last = idx0
+                                while (true) {
+                                    val ev = awaitPointerEvent()
+                                    val c = ev.changes.firstOrNull { it.id == down.id } ?: break
+                                    if (!c.pressed) { c.consume(); break }
+                                    val ls = lanesS
+                                    val cur = laneAt(c.position.y).coerceIn(0, ls.size - 1)
+                                    val range = if (cur >= last) last..cur else cur..last
+                                    for (k in range) vmS.beginMulti(ls[k].id)
+                                    last = cur
+                                    c.consume()
+                                }
+                                return@awaitEachGesture
+                            } else if (lanesNow.size == vmS.project.layers.size) {
+                                vmS.beginReorder(l0.id)
+                                while (true) {
+                                    val ev = awaitPointerEvent()
+                                    val c = ev.changes.firstOrNull { it.id == down.id } ?: break
+                                    if (!c.pressed) { c.consume(); break }
+                                    vmS.reorderTo(l0.id, laneAt(c.position.y).coerceIn(0, vmS.project.layers.size - 1))
+                                    c.consume()
+                                }
+                                vmS.endReorder()
+                                return@awaitEachGesture
+                            }
+                        } else {
+                            val ch = currentEvent.changes.firstOrNull { it.id == down.id }
+                            if (ch != null && !ch.pressed && !ch.isConsumed) {
+                                if (inPill) {
+                                    if (vmS.multiMode || vmS.selected.size > 1) vmS.select(l0.id, additive = true) else vmS.toggleVisible(l0.id)
+                                    return@awaitEachGesture
+                                }
+                                tapped = true
+                            }
+                        }
+                    }
+                }
+                if (tapped) { vmS.clearSelection(); return@awaitEachGesture }
+
+                // ---- geser playhead / zoom cubit / ketuk area kosong
+                var moved = false; var consumedAny = false; var multiTouch = false; var scrubbed = false
                 do {
                     val ev = awaitPointerEvent()
                     if (ev.changes.any { it.isConsumed }) { consumedAny = true; continue }
@@ -95,17 +173,33 @@ fun Timeline(vm: EditorVM, modifier: Modifier, showFab: Boolean, onFab: () -> Un
                         ev.changes.forEach { it.consume() }
                     } else if (n == 1) {
                         val c = ev.changes.first()
+                        tracker.addPosition(c.uptimeMillis, c.position)
                         if (abs(c.position.x - down.position.x) > viewConfiguration.touchSlop ||
                             abs(c.position.y - down.position.y) > viewConfiguration.touchSlop) moved = true
                         val dx = c.position.x - c.previousPosition.x
                         if (dx != 0f) {
                             vmS.seek(vmS.timeMs - (dx / pxPerMsS).toLong())
+                            scrubbed = true
                             c.consume()
                         }
                     }
                 } while (ev.changes.any { it.pressed })
-                // ketuk area kosong timeline: batalkan pilihan layer (panel tertutup)
-                if (!moved && !consumedAny && !multiTouch) vmS.clearSelection()
+
+                if (!moved && !consumedAny && !multiTouch) { vmS.clearSelection(); return@awaitEachGesture }
+
+                // ---- inersia: dilepas sambil melaju, terus meluncur lalu melambat sendiri
+                if (scrubbed && !multiTouch && !consumedAny) {
+                    val v = tracker.calculateVelocity()
+                    if (abs(v.x) > 300f && abs(v.x) > abs(v.y)) {
+                        val startT = vmS.timeMs
+                        flingRef[0] = scope.launch {
+                            AnimationState(0f, v.x).animateDecay(exponentialDecay<Float>(frictionMultiplier = 1.4f, absVelocityThreshold = 15f)) {
+                                val t = startT - (value / pxPerMsS).toLong()
+                                if (t <= 0L || t >= vmS.totalMs) { vmS.seek(t); cancelAnimation() } else vmS.seek(t)
+                            }
+                        }
+                    }
+                }
             }
         }
     ) {
@@ -138,7 +232,7 @@ fun Timeline(vm: EditorVM, modifier: Modifier, showFab: Boolean, onFab: () -> Un
             }
 
             // lajur layer (jarak antar lajur 32dp)
-            Column(Modifier.fillMaxSize().padding(top = 45.dp).verticalScroll(rememberScrollState())) {
+            Column(Modifier.fillMaxSize().padding(top = 45.dp).verticalScroll(vScroll)) {
                 val laneIds = lanes.map { it.id }
                 lanes.forEachIndexed { i, l -> key(l.id) { Lane(vm, l, cx, pxPerMs, multi, i, laneIds) } }
                 Spacer(Modifier.height(80.dp))
@@ -185,7 +279,7 @@ private fun Lane(vm: EditorVM, l: Layer, cx: Float, pxPerMs: Float, multi: Boole
     val indexS by rememberUpdatedState(index)
     val multiS by rememberUpdatedState(multi)
 
-    Box(Modifier.fillMaxWidth().height(28.dp)) {
+    Box(Modifier.fillMaxWidth().height(28.dp).background(if (vm.reorderId == l.id) Mint.copy(alpha = 0.18f) else Color.Transparent)) {
         // bar bergaris
         Box(
             Modifier.offset { IntOffset(x.roundToInt(), 0) }.width(wDp).height(23.dp).align(Alignment.CenterStart)
@@ -253,30 +347,6 @@ private fun Lane(vm: EditorVM, l: Layer, cx: Float, pxPerMs: Float, multi: Boole
             Modifier.align(Alignment.CenterStart).height(25.dp).clip(pillShape)
                 .background(if (multi && sel) Mint else cs.surfaceContainer)
                 .border(1.dp, if (multi && sel) Color.Transparent else cs.outlineVariant.copy(alpha = 0.5f), pillShape)
-                .pointerInput(Unit) {
-                    detectTapGestures(onTap = { if (multiS) vm.select(lS.id, additive = true) else vm.toggleVisible(lS.id) })
-                }
-                .pointerInput(Unit) {
-                    var acc = 0f
-                    var last = 0
-                    var startIdx = 0
-                    detectDragGesturesAfterLongPress(
-                        onDragStart = { off ->
-                            acc = off.y; startIdx = indexS; last = startIdx
-                            vm.beginMulti(lS.id)
-                        },
-                        onDrag = { change, drag ->
-                            change.consume()
-                            acc += drag.y
-                            val all = vm.project.layers
-                            val laneH = 28.dp.toPx()
-                            val cur = (startIdx + Math.floor(((acc + 1.5.dp.toPx()) / laneH).toDouble()).toInt()).coerceIn(0, all.size - 1)
-                            val range = if (cur >= last) last..cur else cur..last
-                            for (k in range) vm.beginMulti(all[k].id)
-                            last = cur
-                        }
-                    )
-                }
                 .padding(start = 8.dp, end = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
